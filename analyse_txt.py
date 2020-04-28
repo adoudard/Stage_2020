@@ -35,7 +35,7 @@ def centre_of_mass(list_x,list_y):
 os.chdir('E:\\Stage 2020\\Scripts')
 
 # Ouverture en lecture seule
-analyse=open("21043b5.txt","r")
+analyse=open("28043b2.txt","r")
 lines = analyse.readlines()[1:]  #Skip du header
 Gs=[]  # List des Gantry Angles
 Cs=[]  # List des Table Angles

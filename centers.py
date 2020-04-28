@@ -104,10 +104,10 @@ def Hough_center(data_dcm_directory, Image_file, Image, Is_a_file, sig, pui, thr
     Dxt = int(round(0.3*(Dx)))   # Marges en x et y au delà de xmin et xmax
     Dyt = int(round(0.3*(Dy)))
 
-    # #Figure de contrôle : Image de gradient seuillé
-    # plt.figure()
-    # plt.title("Image de seuil de " + str(Image_file))
-    # plt.imshow(Thresh[y_min-Dyt:y_max+Dyt+1,x_min-Dxt:x_max+Dxt+1])
+    #Figure de contrôle : Image de gradient seuillé
+    plt.figure()
+    plt.title("Image de seuil de " + str(Image_file))
+    plt.imshow(Thresh[y_min-Dyt:y_max+Dyt+1,x_min-Dxt:x_max+Dxt+1])
     
     # #Figure de contrôle : Image de base après pré-traitement
     # plt.figure()
@@ -518,7 +518,7 @@ def simul_shift(pnb=3, I1=600, I0=0, rc=20, sig=0.5, pui=2, thr=0.7,steps=5):
             Ey[i,j]=S4-(y0-0.5+j/steps)
     return (Ex,Ey)
 
-def simul_WL(pnbc=1.2, pnbb=0.5, I1=600, I0=0, rext=18, I2=170, rint=7.5, sig=0.5, pui=2, thr=0.5, xc=None, yc=None, xb=None, yb=None):
+def simul_WL(pnbc=1.2, pnbb=0.5, I1=600, I0=0, rext=18, I2=170, rint=7.5, sig=0.5, pui=2, thr=0.7, xc=None, yc=None, xb=None, yb=None):
     
     # pnb : taille de la pénombre, pour le champ (c) et la bille (b)
     # I1 : Intensité du champ
@@ -550,7 +550,7 @@ def simul_WL(pnbc=1.2, pnbb=0.5, I1=600, I0=0, rext=18, I2=170, rint=7.5, sig=0.
     print ("---------- Estimation du centre champ -----------")
     x_est_c, y_est_c, r_est_c, sx, sy = Hough_center(None, None, F, False, sig, pui, thr)
     print ("---------- Estimation du centre bille -----------")
-    x_est_b, y_est_b, r_est_b, sx, sy = Hough_center(None, None, B, False, sig, pui, thr)
+    x_est_b, y_est_b, r_est_b, sx, sy = Hough_center(None, None, B, False, sig, pui, 0.5*thr)
     
     plt.figure()
     plt.imshow(Sim)
