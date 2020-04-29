@@ -734,7 +734,7 @@ def analyse_3a(data_dcm_directory,sig=1.1, pui=2, thr=0.5):
     print(" -------------------------------------- ")
     print ("Le centre se situe en position (pixels) ",round(xc,3), " en x et de ",round(yc,3), " en y." )
     print(" Soit un décalage entre les deux positions de : ",round((2/3)*abs(px-np.mean(xs1)),3), " mm en x et de ",round((2/3)*abs(py-np.mean(ys1)),3), " mm en y.")
-    print ("L'erreur de centrage du cône sur l'axe de rotation du collimateur est estimée à : ",round((2/3)*np.sqrt((np.mean(xs1)-xs1[0])**2 + (np.mean(ys1)-ys1[0])**2),3)," avec la méthode à 2 points et à : ",round((2/3)*np.sqrt(np.mean((xs1-px)**2+(ys1-py)**2)),3), " mm selon la méthode à 5 points")
+    print ("L'erreur de centrage du cône sur l'axe de rotation du collimateur est estimée à : ",round((2/3)*np.sqrt((np.mean(xs1)-xs1[0])**2 + (np.mean(ys1)-ys1[0])**2),3)," avec la méthode à 2 points et à : ",round((2/3)*np.sqrt(np.max((xs1-px)**2+(ys1-py)**2)),3), " mm selon la méthode à 5 points")
 
 def analyse_3b(data_dcm_directory,txtfilename,save_fig=True,sig=0.5,pui=2,thr=0.7):
     
