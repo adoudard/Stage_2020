@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Apr 13 10:24:10 2020
-
-@author: alex2
-"""
-
 
 import os
 import matplotlib.pyplot as plt
@@ -172,16 +166,16 @@ print("Ecart entre l'axe de rotation du collimateur et l'axe de la source de : "
 
 A1=s*(XBG0-XFG0)
 A2=s*(YBG0-YFG0)
-A4=s*(YBG90-YFG90)
 A3=s*(XBG90-XFG90)
+A4=s*(YBG90-YFG90)
 A5=s*(XBG180-XFG180)
 A6=s*(YBG180-YFG180)
-A8=s*(YBG270-YFG270)
 A7=s*(XBG270-XFG270)
+A8=s*(YBG270-YFG270)
 A9=s*(XBG180E-XFG180E)
 A10=s*(YBG180E-YFG180E)
-A12=s*(YBG180Ts-YFG180Ts)
 A11=s*(XBG180Ts-XFG180Ts)
+A12=s*(YBG180Ts-YFG180Ts)
 
 
 angles=[(0,0),(90,0),(180,0),(270,0),(179.99,0),(180,-90),(180,-45),(180,90),(180,45)]

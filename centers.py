@@ -62,7 +62,7 @@ def extract_ROI(data_dcm_directory,Image_file,Image,Is_a_file,diam):
     return (ROI,ind_max_x,ind_max_y,margin_x,margin_y)
 
 
-def Hough_center(data_dcm_directory, Image_file, Image, Is_a_file, sig, pui, thr, resol_r=0.5, resol_x=1, resol_y=1):
+def Hough_center(data_dcm_directory, Image_file, Image, Is_a_file, sig, pui, thr, resol_r=1, resol_x=1, resol_y=1):
     
     if Is_a_file:
         #Lecture des données pixel du fichier DICOM
@@ -734,7 +734,28 @@ def analyse_3a(data_dcm_directory,sig=1.1, pui=2, thr=0.5):
     print(" -------------------------------------- ")
     print ("Le centre se situe en position (pixels) ",round(xc,3), " en x et de ",round(yc,3), " en y." )
     print(" Soit un décalage entre les deux positions de : ",round((2/3)*abs(px-np.mean(xs1)),3), " mm en x et de ",round((2/3)*abs(py-np.mean(ys1)),3), " mm en y.")
-    print ("L'erreur de centrage du cône sur l'axe de rotation du collimateur est estimée à : ",round((2/3)*np.sqrt((np.mean(xs1)-xs1[0])**2 + (np.mean(ys1)-ys1[0])**2),3)," avec la méthode à 2 points et à : ",round((2/3)*np.sqrt(np.max((xs1-px)**2+(ys1-py)**2)),3), " mm selon la méthode à 5 points")
+    print ("L'erreur de centrage du cône sur l'axe de rotation du collimateur est estimée à : ",round((2/3)*np.sqrt((np.mean(xs1)-xs1[0])**2 + (np.mean(ys1)-ys1[0])**2),3)," avec la méthode à 2 points et à : ",round((2/3)*np.sqrt(np.max((xs51-px)**2+(ys51-py)**2)),3), " mm selon la méthode à 5 points")
+    
+    plt.figure()
+    ray2=np.sqrt((np.mean(x1)-x1[0])**2 + (np.mean(y1)-y1[0])**2)
+    ray5=np.sqrt(np.max((x51-xc)**2+(y51-yc)**2))
+    circle_2=plt.Circle((np.mean(x1),np.mean(y1)),radius=ray2,color='red',fill=False)
+    circle_5=plt.Circle((xc,yc),radius=ray5,color='blue',fill=False)
+    plt.scatter(x1,y1,color='red', label='mesures à 2 points')
+    plt.scatter(x51,y51,color='blue', label= 'mesures à 5 points')
+    plt.scatter(np.mean(x1),np.mean(y1),color='brown',label='centre 2 points')
+    plt.scatter(xc,yc,color='purple', label='centre 5 points')
+    plt.xlim(639,641)
+    plt.ylim(637,639)
+    fig = plt.gcf()
+    ax = fig.gca()
+    ax.add_artist(circle_2)
+    ax.add_artist(circle_5)
+    # plt.text(x270-1,y270-1, "Excentrage : "+str(round(0.224*ray,3))+ "mm")
+    # plt.text(np.mean(XBG270),np.mean(YBG270),"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG270)**2+np.std(YBG270)**2),3))+ "mm")
+    plt.title('G0, C variable : analyse_3a')
+    plt.legend(loc='upper left')
+    plt.gca().set_aspect('equal', adjustable='box')
 
 def analyse_3b(data_dcm_directory,txtfilename,save_fig=True,sig=0.5,pui=2,thr=0.7):
     
@@ -795,6 +816,64 @@ def analyse_3b(data_dcm_directory,txtfilename,save_fig=True,sig=0.5,pui=2,thr=0.
     res_file.close()
     return None
 
+def analyse_3bp(data_dcm_directory,txtfilename,save_fig=True,sig=0.5,pui=2,thr=0.7):
+    
+    file_list = []
+    for i in range(12):
+        file_list.append('WL CC4-10-'+str(i).zfill(3)+'.dcm')
+        # Liste des acquisitions WL
+        
+    res_file = open(txtfilename,"w")
+    Data = []
+    Header = ['File Name', 'Gantry Angle', 'Collimator Angle', 'Table Angle', 'Field Coordinates', 'Ball Coordinates']
+    Data.append(Header)
+    t = time.time()  # Contrôle de la durée de l'analyse
+    t1 = t
+    i = 1 
+    for file in file_list:
+        
+        print('Acq '+str(i)+' sur '+str(len(file_list)))
+        # Filtrage morphologique de l'image
+        F,B = morpho_split(data_dcm_directory, file, None, True, 0.1, 10)
+        # Détermination des centres bille et champ
+        xf, yf, rf, sx, sy = Hough_center(data_dcm_directory, None, F, False, sig, pui, thr)
+        xb, yb, rb, sx, sy = Hough_center(data_dcm_directory, None, B, False, sig, pui, 0.7*thr)
+        # Récupération des tags DICOM
+        tags = dcm.dcmread(os.path.join(data_dcm_directory,file))
+        # Récupération du contenu des tags avec le mot clé correspondant.
+        Data.append([file,str(tags['GantryAngle'].value),str(tags['BeamLimitingDeviceAngle'].value),str(tags['PatientSupportAngle'].value),str((xf,yf)),str((xb,yb))])
+        t2=time.time()
+        print("traitement de l'acquistion en : ",round(t2-t1,1)," s.")
+        print("Temps total : ", round(t2-t,1), " s.")
+        t1 = t2
+        i+=1
+        #Lecture des données pixel du fichier DICOM
+        if save_fig:
+            
+            Lec = sitk.ReadImage(os.path.join(data_dcm_directory, file))
+            Image = sitk.GetArrayFromImage(Lec[:,:,0])
+            plt.figure()
+            plt.imshow(Image)
+            circle_f=plt.Circle((xf,yf),radius=rf,color='red',fill=False)
+            circle_b=plt.Circle((xb,yb),radius=rb,color='blue',fill=False)
+            plt.xlim(600,680)
+            plt.ylim(600,680)
+            plt.scatter(xf,yf,color='red',label='Centre champ')
+            plt.scatter(xb,yb,color='blue',label='Centre bille')
+            fig = plt.gcf()
+            ax = fig.gca()
+            ax.add_artist(circle_f)
+            ax.add_artist(circle_b)
+            plt.title("G = " + str(round(tags['GantryAngle'].value)) + ", T = " + str(round(tags['PatientSupportAngle'].value)) + " C = " + str(round(tags['BeamLimitingDeviceAngle'].value)) )
+            plt.legend()
+            plt.savefig("Acq "+str(i-1)+".png")
+            plt.close()
+            
+    for line in Data :
+        res_file.write("\t".join(line) + "\n")
+    
+    res_file.close()
+    return None
 ##### ANALYSE DU FICHIER TXT CREE ####
 ##analyse_txt.py##
     
