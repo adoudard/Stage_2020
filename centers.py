@@ -105,9 +105,9 @@ def Hough_center(data_dcm_directory, Image_file, Image, Is_a_file, sig, pui, thr
     Dyt = int(round(0.3*(Dy)))
 
     #Figure de contrôle : Image de gradient seuillé
-    plt.figure()
-    plt.title("Image de seuil de " + str(Image_file))
-    plt.imshow(Thresh[y_min-Dyt:y_max+Dyt+1,x_min-Dxt:x_max+Dxt+1])
+    # plt.figure()
+    # plt.title("Image de seuil de " + str(Image_file))
+    # plt.imshow(Thresh[y_min-Dyt:y_max+Dyt+1,x_min-Dxt:x_max+Dxt+1])
     
     # #Figure de contrôle : Image de base après pré-traitement
     # plt.figure()
@@ -867,6 +867,7 @@ def analyse_3bp(data_dcm_directory,txtfilename,save_fig=True,sig=0.5,pui=2,thr=0
             plt.title("G = " + str(round(tags['GantryAngle'].value)) + ", T = " + str(round(tags['PatientSupportAngle'].value)) + " C = " + str(round(tags['BeamLimitingDeviceAngle'].value)) )
             plt.legend()
             plt.savefig("Acq "+str(i-1)+".png")
+            plt.text(620, 620, 'Shift vertical : '+str(0.224*(yb-yf))+' mm\nShift horizontal : '+str(0.224*(xb-xf))+' mm')
             plt.close()
             
     for line in Data :

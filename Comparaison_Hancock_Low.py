@@ -137,7 +137,7 @@ ksi=np.array([B0[0],B0[1],B90[0],B90[1],B180[0],B180[1],B270[0],B270[1],AX0T[0],
 
 delta=np.dot(B,ksi.transpose())
 
-print("Optimisation de Low : La bille est excentrée de dX = ",-1*round(delta[1],3)," mm, dY = ",-1*round(delta[0],3), " mm et de dZ = ", -1* round(delta[2],3)," mm dans le système de coorodonnées Varian IEC 1217.")
+print("Optimisation de Low : La bille est excentrée de dX = ",-1*round(delta[1],3)," mm, dY = ",round(delta[0],3), " mm et de dZ = ", -round(delta[2],3)," mm dans le système de coorodonnées Varian IEC 1217.")
               
 plt.figure()
 
@@ -376,5 +376,8 @@ plt.text(s*np.mean(XBG270)-shift270[0],s*np.mean(YBG270)-shift270[1],"Incertitud
 plt.title('G=270, C variable')
 plt.gca().set_aspect('equal', adjustable='box')
 
+print("Optimisation de Hancock sans table : La bille est excentrée de dX = ",-1*round(PM[1],3)," mm, dY = ",round(PM[0],3), " mm et de dZ = ", -1*round(PM[2],3)," mm dans le système de coorodonnées Varian IEC 1217.")
+
 #2. Projections en fonction de la table
 
+# Il va falloir chercher à optimiser la position de l'axe de rotation de la table. Puisque PM est un point autour duquel on veut se stabiliser, on va devoir rapprocher l'axe de rotation de PM.
