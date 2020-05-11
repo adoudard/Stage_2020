@@ -111,6 +111,32 @@ YBG0Ts=np.append(YBG0Ts,Bs[0][1])
 (x270, y270) = (np.mean(XFG270),np.mean(YFG270))
 (x0t, y0t) = (np.mean(XFG0Ts),np.mean(YFG0Ts))
 
+dx270 = x4_270 - XFG0[0]
+dy270 = y4_270 - YFG0[0]
+dx90 = x4_90 - XFG0[1]
+dy90 = y4_90 - YFG0[1]
+
+XFG0v = XFG0 + np.array([dx270, dx90])
+YFG0v = YFG0 + np.array([dy270, dy90])
+
+XFG90v = XFG90 + np.array([dx90, dx270])
+YFG90v = YFG90 + np.array([dy90, dy270])
+
+XFG180v = XFG180 + np.array([dx270, dx90])
+YFG180v = YFG180 + np.array([dy270, dy90])
+
+XFG270v = XFG270 + np.array([dx90, dx270])
+YFG270v = YFG270 + np.array([dy90, dy270])
+
+XFG0Tsv = XFG0Ts + np.array([dx270, dx270, dx270, dx270, dx270])
+YFG0Tsv = YFG0Ts + np.array([dy270, dy270, dy270, dy270, dy270])
+
+(x0v, y0v) = (np.mean(XFG0v),np.mean(YFG0v))
+(x90v, y90v) = (np.mean(XFG90v),np.mean(YFG90v))
+(x180v, y180v) = (np.mean(XFG180v),np.mean(YFG180v))
+(x270v, y270v) = (np.mean(XFG270v),np.mean(YFG270v))
+(x0tv, y0tv) = (np.mean(XFG0Tsv),np.mean(YFG0Tsv))
+
 
 s=(2/3)*0.336 #scale
 
@@ -124,35 +150,32 @@ s=(2/3)*0.336 #scale
 AX0=s*(XBG0-XFG0)  # [270,90]
 AY0=s*(YBG0-YFG0)
 
-AX0v=np.array([-ex/2,ex/2])+0.5*np.sum(AX0)+s*(x0-cx)
-AY0v=np.array([-ey/2,ey/2])+0.5*np.sum(AY0)+s*(y0-cy)
+AX0v=s*(XBG0-XFG0v)  # [270,90]
+AY0v=s*(YBG0-YFG0v)
 
 AX90=s*(XBG90-XFG90)  # [90,270]
 AY90=s*(YBG90-YFG90)
 
-AX90v=np.array([ex/2,-ex/2])+0.5*np.sum(AX90)+s*(x90-cx)
-AY90v=np.array([ey/2,-ey/2])+0.5*np.sum(AY90)+s*(y90-cy)
+AX90v=s*(XBG90-XFG90v)  # [90,270]
+AY90v=s*(YBG90-YFG90v)
 
 AX180=s*(XBG180-XFG180)  # [270,90]
 AY180=s*(YBG180-YFG180)
 
-AX180v=np.array([-ex/2,ex/2])+0.5*np.sum(AX180)+s*(x180-cx)
-AY180v=np.array([-ey/2,ey/2])+0.5*np.sum(AY180)+s*(y180-cy)
+AX180v=s*(XBG180-XFG180v)  # [270,90]
+AY180v=s*(YBG180-YFG180v)
 
 AX270=s*(XBG270-XFG270)  # [90,270]
 AY270=s*(YBG270-YFG270)
 
-AX270v=np.array([ex/2,-ex/2])+0.5*np.sum(AX270)+s*(x270-cx)
-AY270v=np.array([ey/2,-ey/2])+0.5*np.sum(AY270)+s*(y270-cy)
+AX270v=s*(XBG270-XFG270v)  # [90,270]
+AY270v=s*(YBG270-YFG270v)
 
 AX0T=s*(XBG0Ts-XFG0Ts)  # [270]
 AY0T=s*(YBG0Ts-YFG0Ts)
 
-Dx=AX0[0]-AX0[1]
-Dy=AY0[0]-AY0[1]
-
-AX0Tv = AX0T-Dx/2-ex/2+s*(x0t-cx)
-AY0Tv = AY0T-Dy/2-ey/2+s*(y0t-cy)
+AX0T=s*(XBG0Ts-XFG0Tsv)  # [270]
+AY0T=s*(YBG0Ts-YFG0Tsv)
 
 angles=[(0,0),(90,0),(180,0),(270,0),(0,-90),(0,-45),(0,45),(0,90)]
 
@@ -180,8 +203,8 @@ def Low(AX0,AY0,AX90,AY90,AX180,AY180,AX270,AY270,AX0T,AY0T):
 delta=Low(AX0,AY0,AX90,AY90,AX180,AY180,AX270,AY270,AX0T,AY0T)
 # deltav=Low(AX0v,AY0v,AX90v,AY90v,AX180v,AY180v,AX270v,AY270v,AX0Tv,AY0Tv):
 
-print("Optimisation de Low : La bille est excentrée de dX = ",-1*round(delta[1],3)," mm, dY = ",round(delta[0],3), " mm et de dZ = ", -round(delta[2],3)," mm dans le système de coorodonnées Varian IEC 1217.")
-              
+print("Optimisation de Low : La bille est excentrée de dX = ",-1*round(delta[1],3)," mm, dY = ",round(delta[0],3), " mm et de dZ = ", -round(delta[2],3)," mm dans le système de coorodonnées Varian IEC 1217.")    
+      
 plt.figure()
 
 plt.subplot(234)
@@ -291,11 +314,7 @@ plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
 
 
-# plt.figure()
-
-# xs=[0,90,180,270]
-# ys=[s*(np.mean(XBG0)-x0),s*(np.mean(XBG90)-x90),s*(np.mean(XBG180)-x180),s*(np.mean(XBG270)-x270)]
-# plt.scatter(xs,ys)
+# "Avant correction de la position de la bille\nWL virtuels avec CC4"
 
 plt.figure()
 
@@ -308,17 +327,18 @@ plt.yticks([])
 
 plt.subplot(232)
 shift0=(np.mean(s*XBG0),np.mean(s*YBG0))
-ray=np.sqrt((ex/2)**2+(ey/2)**2)
-circle_f=plt.Circle((s*cx-shift0[0],s*cy-shift0[1]),radius=ray,color='red',fill=False)
-plt.scatter(np.array([x4_270,x4_90])-shift0[0],np.array([y4_270,y4_90])-shift0[1],color='red',label='Champ')
-plt.scatter(s*x0-shift0[0],s*y0-shift0[1],color='brown',label='Centroïde Champ')
+ray=s*np.sqrt(np.max((x0v-XFG0v)**2+(y0v-YFG0v)**2))
+circle_f=plt.Circle((s*x0v-shift0[0],s*y0v-shift0[1]),radius=ray,color='red',fill=False)
+plt.scatter(s*XFG0v-shift0[0],s*YFG0v-shift0[1],color='red',label='Champ')
+plt.scatter(s*XBG0-shift0[0],s*YBG0-shift0[1],color='orange',label='Bille')
+plt.scatter(s*x0v-shift0[0],s*y0v-shift0[1],color='brown',label='Centroïde Champ')
 plt.xlim(-1,1)
 plt.ylim(-1,1)
 fig2 = plt.gcf()
 ax2 = fig2.gca()
 ax2.add_artist(circle_f)
-plt.text(-0.5,-0.5, "Excentrage : "+str(round(s*ray,3))+ "mm")
-plt.text(-0.8,-0.8,"Incertitude : "+str(round(s*np.sqrt(np.std(XBG0)**2+np.std(YBG0)**2),3))+ "mm")
+plt.text(s*(x0v-1)-shift0[0],s*(y0v-1)-shift0[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
+plt.text(s*np.mean(XBG0)-shift0[0],s*np.mean(YBG0)-shift0[1],"Incertitude : "+str(round(s*np.sqrt(np.std(XBG0)**2+np.std(YBG0)**2),3))+ "mm")
 plt.title('G=0, C variable')
 plt.legend(loc='upper left')
 plt.xticks(np.linspace(-1,1,9))
@@ -329,17 +349,17 @@ plt.gca().set_aspect('equal', adjustable='box')
 
 plt.subplot(233)
 shift90=(np.mean(s*XBG90),np.mean(s*YBG90))
-ray=s*np.sqrt(np.max((x90-XFG90)**2+(y90-YFG90)**2))
-circle_f=plt.Circle((s*x90-shift90[0],s*y90-shift90[1]),radius=ray,color='red',fill=False)
-plt.scatter(s*XFG90-shift90[0],s*YFG90-shift90[1],color='red')
+ray=s*np.sqrt(np.max((x90v-XFG90v)**2+(y90v-YFG90v)**2))
+circle_f=plt.Circle((s*x90v-shift90[0],s*y90v-shift90[1]),radius=ray,color='red',fill=False)
+plt.scatter(s*XFG90v-shift90[0],s*YFG90v-shift90[1],color='red')
 plt.scatter(s*XBG90-shift90[0],s*YBG90-shift90[1],color='orange')
-plt.scatter(s*x90-shift90[0],s*y90-shift90[1],color='brown')
+plt.scatter(s*x90v-shift90[0],s*y90v-shift90[1],color='brown')
 plt.xlim(-1,1)
 plt.ylim(-1,1)
 fig2 = plt.gcf()
 ax2 = fig2.gca()
 ax2.add_artist(circle_f)
-plt.text(s*(x90-1)-shift90[0],s*(y90-1)-shift90[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
+plt.text(s*(x90v-1)-shift90[0],s*(y90v-1)-shift90[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG90)-shift90[0],s*np.mean(YBG90)-shift90[1],"Incertitude : "+str(round(s*np.sqrt(np.std(XBG90)**2+np.std(YBG90)**2),3))+ "mm")
 plt.title('G=90, C variable')
 plt.xlabel('mm')
@@ -350,17 +370,17 @@ plt.gca().set_aspect('equal', adjustable='box')
 
 plt.subplot(235)
 shift180=(np.mean(s*XBG180),np.mean(s*YBG180))
-ray=s*np.sqrt(np.max((x180-XFG180)**2+(y180-YFG180)**2))
-circle_f=plt.Circle((s*x180-shift180[0],s*y180-shift180[1]),radius=ray,color='red',fill=False)
-plt.scatter(s*XFG180-shift180[0],s*YFG180-shift180[1],color='red')
+ray=s*np.sqrt(np.max((x180v-XFG180v)**2+(y180v-YFG180v)**2))
+circle_f=plt.Circle((s*x180v-shift180[0],s*y180v-shift180[1]),radius=ray,color='red',fill=False)
+plt.scatter(s*XFG180v-shift180[0],s*YFG180v-shift180[1],color='red')
 plt.scatter(s*XBG180-shift180[0],s*YBG180-shift180[1],color='orange')
-plt.scatter(s*x180-shift180[0],s*y180-shift180[1],color='brown')
+plt.scatter(s*x180v-shift180[0],s*y180v-shift180[1],color='brown')
 plt.xlim(-1,1)
 plt.ylim(-1,1)
 fig2 = plt.gcf()
 ax2 = fig2.gca()
 ax2.add_artist(circle_f)
-plt.text(s*(x180-1)-shift180[0],s*(y180-1)-shift180[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
+plt.text(s*(x180v-1)-shift180[0],s*(y180v-1)-shift180[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG180)-shift180[0],s*np.mean(YBG180)-shift180[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG180)**2+np.std(YBG180)**2),3))+ "mm")
 plt.title('G=180, C variable')
 plt.xlabel('mm')
@@ -370,10 +390,10 @@ plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
 
 plt.subplot(231)
-shift=(np.mean(s*XFG0Ts),np.mean(s*YFG0Ts))
-plt.scatter(s*XFG0Ts-shift[0],s*YFG0Ts-shift[1],color='red')
+shift=(np.mean(s*XFG0Tsv),np.mean(s*YFG0Tsv))
+plt.scatter(s*XFG0Tsv-shift[0],s*YFG0Tsv-shift[1],color='red')
 plt.scatter(s*XBG0Ts-shift[0],s*YBG0Ts-shift[1],color='orange')
-plt.scatter(s*x0t-shift[0],s*y0t-shift[1],color='brown')
+plt.scatter(s*x0tv-shift[0],s*y0tv-shift[1],color='brown')
 plt.xlim(-1,1)
 plt.ylim(-1,1)
 plt.title('G=0, T variable')
@@ -385,17 +405,17 @@ plt.gca().set_aspect('equal', adjustable='box')
 
 plt.subplot(236)
 shift270=(np.mean(s*XBG270),np.mean(s*YBG270))
-ray=s*np.sqrt(np.max((x270-XFG270)**2+(y270-YFG270)**2))
-circle_f=plt.Circle((s*x270-shift270[0],s*y270-shift270[1]),radius=ray,color='red',fill=False)
-plt.scatter(s*XFG270-shift270[0],s*YFG270-shift270[1],color='red')
+ray=s*np.sqrt(np.max((x270v-XFG270v)**2+(y270v-YFG270v)**2))
+circle_f=plt.Circle((s*x270v-shift270[0],s*y270v-shift270[1]),radius=ray,color='red',fill=False)
+plt.scatter(s*XFG270v-shift270[0],s*YFG270v-shift270[1],color='red')
 plt.scatter(s*XBG270-shift270[0],s*YBG270-shift270[1],color='orange')
-plt.scatter(s*x270-shift270[0],s*y270-shift270[1],color='brown')
+plt.scatter(s*x270v-shift270[0],s*y270v-shift270[1],color='brown')
 plt.xlim(-1,1)
 plt.ylim(-1,1)
 fig3 = plt.gcf()
 ax3 = fig3.gca()
 ax3.add_artist(circle_f)
-plt.text(s*(x270-1)-shift270[0],s*(y270-1)-shift270[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
+plt.text(s*(x270v-1)-shift270[0],s*(y270v-1)-shift270[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG270)-shift270[0],s*np.mean(YBG270)-shift270[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG270)**2+np.std(YBG270)**2),3))+ "mm")
 plt.title('G=270, C variable')
 plt.xlabel('mm')
@@ -403,7 +423,6 @@ plt.ylabel('mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
-
 
 ##Methode d'optimisation de Hancock##
 
@@ -445,10 +464,18 @@ PMv = calcul_PM(AY0v, AY90v, AY180v, AY270v, AX0v, AX90v, AX180v, AX270v)
 
 # On va soustraire PM (ses projections) à la bille
 
-GT90=np.array([AY0[1]-PM[0], AY90[0]-PM[0], AY180[1]-PM[0], AY270[0]-PM[0], AY0[1]-PM[0]])
-GT270=np.array([AY0[0]-PM[0], AY90[1]-PM[0], AY180[0]-PM[0], AY270[1]-PM[0], AY0[0]-PM[0]])
-AB90=np.array([AX0[1]+PM[1], AX90[0]-PM[2], AX180[1]-PM[1], AX270[0]+PM[2], AX0[1]+PM[1]]) 
-AB270=np.array([AX0[0]+PM[1], AX90[1]-PM[2], AX180[0]-PM[1], AX270[1]+PM[2], AX0[0]+PM[1]])
+def calculs_GT_AB(AX0,AY0,AX90,AY90,AX180,AY180,AX270,AY270,PM):
+
+    GT90=np.array([AY0[1]-PM[0], AY90[0]-PM[0], AY180[1]-PM[0], AY270[0]-PM[0], AY0[1]-PM[0]])
+    GT270=np.array([AY0[0]-PM[0], AY90[1]-PM[0], AY180[0]-PM[0], AY270[1]-PM[0], AY0[0]-PM[0]])
+    AB90=np.array([AX0[1]+PM[1], AX90[0]-PM[2], AX180[1]-PM[1], AX270[0]+PM[2], AX0[1]+PM[1]]) 
+    AB270=np.array([AX0[0]+PM[1], AX90[1]-PM[2], AX180[0]-PM[1], AX270[1]+PM[2], AX0[0]+PM[1]])
+    
+    return (GT90,GT270,AB90,AB270)
+
+(GT90,GT270,AB90,AB270) = calculs_GT_AB(AX0,AY0,AX90,AY90,AX180,AY180,AX270,AY270,PM)
+
+(GT90v,GT270v,AB90v,AB270v) = calculs_GT_AB(AX0v,AY0v,AX90v,AY90v,AX180v,AY180v,AX270v,AY270v,PMv)
 
 
 plt.figure()
@@ -593,6 +620,147 @@ plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
 
 print("Optimisation de Hancock sans table : La bille est excentrée de dX = ",-1*round(PM[1],3)," mm, dY = ",round(PM[0],3), " mm et de dZ = ", -1*round(PM[2],3)," mm dans le système de coorodonnées Varian IEC 1217.")
+
+plt.figure()
+x=np.append(np.degrees(theta),360.)
+plt.scatter(x, AB90v, color='blue')
+plt.scatter(x, AB270v,color='blue')
+plt.scatter(x, GT90v, color='lime')
+plt.scatter(x, GT270v, color='lime')
+plt.scatter(x, np.sqrt(GT90v**2+AB90v**2), color='red')
+plt.scatter(x, np.sqrt(GT270v**2+AB270v**2), color='red')
+tAB90v = interpolate.splrep(x, AB90v, s=0)
+tAB270v = interpolate.splrep(x, AB270v, s=0)
+tGT90v = interpolate.splrep(x, GT90v, s=0)
+tGT270v = interpolate.splrep(x, GT270v, s=0)
+xnew = np.arange(0, 360, 0.5)
+yAB90v = interpolate.splev(xnew, tAB90v, der=0)
+yAB270v = interpolate.splev(xnew, tAB270v, der=0)
+yGT90v = interpolate.splev(xnew, tGT90v, der=0)
+yGT270v = interpolate.splev(xnew, tGT270v, der=0)
+plt.plot(xnew,yAB270v,color='blue', linestyle='-',label='AB270 virtuel')
+plt.plot(xnew,yAB90v,color='blue', linestyle=':',label='AB90 virtuel')
+plt.plot(xnew,yGT270v,color='lime', linestyle='-',label='GT270 virtuel')
+plt.plot(xnew,yGT90v,color='lime', linestyle=':',label='GT90 virtuel')
+plt.plot(xnew,np.sqrt(yGT270v**2+yAB270v**2),color='red', linestyle='-',label='Tot270 virtuel')
+plt.plot(xnew,np.sqrt(yGT90v**2+yAB90v**2),color='red', linestyle=':',label='Tot90 virtuel')
+plt.plot(xnew,np.ones(len(xnew)),color='black')
+plt.plot(xnew,-1*np.ones(len(xnew)),color='black')
+plt.ylim(-0.3,0.4)
+plt.xlim(0,360)
+plt.legend(loc='upper left')
+plt.ylabel('mm')
+plt.xlabel('Angle Bras')
+plt.title("Déplacements latéraux(AB) et avant-arrière(GT) \n en fonction de l'angle bras\n avec mesures virtuelles CC4")
+plt.grid(linestyle='--')
+
+plt.figure()
+
+plt.subplot(234)
+plt.text(0,0,"Après correction de la position de la bille\nsans prise en compte de la table\nen virtuel CC4")
+plt.xlim(-1,5)
+plt.ylim(-0.5,0.5)
+plt.xticks([])
+plt.yticks([])
+
+plt.subplot(232)
+shift0=(np.mean(s*XBG0+PMv[1]),np.mean(s*YBG0-PMv[0]))
+ray=s*np.sqrt(np.max((x0v-XFG0v)**2+(y0v-YFG0v)**2))
+circle_f=plt.Circle((s*x0v-shift0[0],s*y0v-shift0[1]),radius=ray,color='red',fill=False)
+plt.scatter(s*XFG0v-shift0[0],s*YFG0v-shift0[1],color='red',label='Champ')
+plt.scatter(s*XBG0+PMv[1]-shift0[0],s*YBG0-PMv[0]-shift0[1],color='orange',label='Bille')
+plt.scatter(s*x0v-shift0[0],s*y0v-shift0[1],color='brown',label='Centroïde Champ')
+plt.xlim(-1,1)
+plt.ylim(-1,1)
+fig2 = plt.gcf()
+ax2 = fig2.gca()
+ax2.add_artist(circle_f)
+plt.text(s*(x0v-1)-shift0[0],s*(y0v-1)-shift0[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
+plt.text(s*np.mean(XBG0)-shift0[0],s*np.mean(YBG0)-shift0[1],"Incertitude : "+str(round(s*np.sqrt(np.std(XBG0)**2+np.std(YBG0)**2),3))+ "mm")
+plt.title('G=0, C variable')
+plt.legend(loc='upper left')
+plt.xticks(np.linspace(-1,1,9))
+plt.grid(linestyle='--')
+plt.xlabel('mm')
+plt.ylabel('mm')
+plt.gca().set_aspect('equal', adjustable='box')
+
+plt.subplot(233)
+shift90=(np.mean(s*XBG90-PMv[2]),np.mean(s*YBG90-PMv[0]))
+ray=s*np.sqrt(np.max((x90v-XFG90v)**2+(y90v-YFG90v)**2))
+circle_f=plt.Circle((s*x90v-shift90[0],s*y90v-shift90[1]),radius=ray,color='red',fill=False)
+plt.scatter(s*XFG90v-shift90[0],s*YFG90v-shift90[1],color='red')
+plt.scatter(s*XBG90-PMv[2]-shift90[0],s*YBG90-PMv[0]-shift90[1],color='orange')
+plt.scatter(s*x90v-shift90[0],s*y90v-shift90[1],color='brown')
+plt.xlim(-1,1)
+plt.ylim(-1,1)
+fig2 = plt.gcf()
+ax2 = fig2.gca()
+ax2.add_artist(circle_f)
+plt.text(s*(x90v-1)-shift90[0],s*(y90v-1)-shift90[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
+plt.text(s*np.mean(XBG90)-shift90[0],s*np.mean(YBG90)-shift90[1],"Incertitude : "+str(round(s*np.sqrt(np.std(XBG90)**2+np.std(YBG90)**2),3))+ "mm")
+plt.title('G=90, C variable')
+plt.xlabel('mm')
+plt.ylabel('mm')
+plt.xticks(np.linspace(-1,1,9))
+plt.grid(linestyle='--')
+plt.gca().set_aspect('equal', adjustable='box')
+
+plt.subplot(235)
+shift180=(np.mean(s*XBG180-PMv[1]),np.mean(s*YBG180-PMv[0]))
+ray=s*np.sqrt(np.max((x180v-XFG180v)**2+(y180v-YFG180v)**2))
+circle_f=plt.Circle((s*x180v-shift180[0],s*y180v-shift180[1]),radius=ray,color='red',fill=False)
+plt.scatter(s*XFG180v-shift180[0],s*YFG180v-shift180[1],color='red')
+plt.scatter(s*XBG180-PMv[1]-shift180[0],s*YBG180-PMv[0]-shift180[1],color='orange')
+plt.scatter(s*x180v-shift180[0],s*y180v-shift180[1],color='brown')
+plt.xlim(-1,1)
+plt.ylim(-1,1)
+fig2 = plt.gcf()
+ax2 = fig2.gca()
+ax2.add_artist(circle_f)
+plt.text(s*(x180v-1)-shift180[0],s*(y180v-1)-shift180[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
+plt.text(s*np.mean(XBG180)-shift180[0],s*np.mean(YBG180)-shift180[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG180)**2+np.std(YBG180)**2),3))+ "mm")
+plt.title('G=180, C variable')
+plt.xlabel('mm')
+plt.ylabel('mm')
+plt.xticks(np.linspace(-1,1,9))
+plt.grid(linestyle='--')
+plt.gca().set_aspect('equal', adjustable='box')
+
+plt.subplot(231)
+shift=(np.mean(s*XFG0Tsv-PMv[1]),np.mean(s*YFG0Tsv+PMv[0]))
+plt.scatter(s*XFG0Tsv-PMv[1]-shift[0],s*YFG0Tsv+PMv[0]-shift[1],color='red')
+plt.scatter(s*XBG0Ts-shift[0],s*YBG0Ts-shift[1],color='orange')
+plt.scatter(s*x0tv-PMv[1]-shift[0],s*y0tv+PMv[0]-shift[1],color='brown')
+plt.xlim(-1,1)
+plt.ylim(-1,1)
+plt.title('G=0, T variable')
+plt.xlabel('mm')
+plt.ylabel('mm')
+plt.xticks(np.linspace(-1,1,9))
+plt.grid(linestyle='--')
+plt.gca().set_aspect('equal', adjustable='box')
+
+plt.subplot(236)
+shift270=(np.mean(s*XBG270+PMv[2]),np.mean(s*YBG270-PMv[0]))
+ray=s*np.sqrt(np.max((x270v-XFG270v)**2+(y270v-YFG270v)**2))
+circle_f=plt.Circle((s*x270v-shift270[0],s*y270v-shift270[1]),radius=ray,color='red',fill=False)
+plt.scatter(s*XFG270v-shift270[0],s*YFG270v-shift270[1],color='red')
+plt.scatter(s*XBG270+PMv[2]-shift270[0],s*YBG270-PMv[0]-shift270[1],color='orange')
+plt.scatter(s*x270v-shift270[0],s*y270v-shift270[1],color='brown')
+plt.xlim(-1,1)
+plt.ylim(-1,1)
+fig3 = plt.gcf()
+ax3 = fig3.gca()
+ax3.add_artist(circle_f)
+plt.text(s*(x270v-1)-shift270[0],s*(y270v-1)-shift270[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
+plt.text(s*np.mean(XBG270)-shift270[0],s*np.mean(YBG270)-shift270[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG270)**2+np.std(YBG270)**2),3))+ "mm")
+plt.title('G=270, C variable')
+plt.xlabel('mm')
+plt.ylabel('mm')
+plt.xticks(np.linspace(-1,1,9))
+plt.grid(linestyle='--')
+plt.gca().set_aspect('equal', adjustable='box')
 
 #2. Projections en fonction de la table
 
