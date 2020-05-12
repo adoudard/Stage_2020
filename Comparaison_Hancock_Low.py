@@ -490,8 +490,8 @@ def calculs_GT_AB(AX0,AY0,AX90,AY90,AX180,AY180,AX270,AY270,PM):
 
     GT90=np.array([AY0[1]-PM[0], AY90[0]-PM[0], AY180[1]-PM[0], AY270[0]-PM[0], AY0[1]-PM[0]])
     GT270=np.array([AY0[0]-PM[0], AY90[1]-PM[0], AY180[0]-PM[0], AY270[1]-PM[0], AY0[0]-PM[0]])
-    AB90=np.array([-AX0[1]-PM[1], -AX90[0]+PM[2], -AX180[1]+PM[1], -AX270[0]-PM[2], -AX0[1]-PM[1]]) 
-    AB270=np.array([-AX0[0]-PM[1], -AX90[1]+PM[2], -AX180[0]+PM[1], -AX270[1]-PM[2], -AX0[0]-PM[1]])
+    AB90=-1*np.array([-AX0[1]-PM[1], -AX90[0]+PM[2], -AX180[1]+PM[1], -AX270[0]-PM[2], -AX0[1]-PM[1]])   #  *-1 car le poly RIT n'est pas cohérent
+    AB270=-1*np.array([-AX0[0]-PM[1], -AX90[1]+PM[2], -AX180[0]+PM[1], -AX270[1]-PM[2], -AX0[0]-PM[1]])  #  avec lui-même ... Même si ça ne change fondamentalement rien
     
     return (GT90,GT270,AB90,AB270)
 
