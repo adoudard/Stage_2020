@@ -174,8 +174,26 @@ AY270v=s*(YBG270-YFG270v)
 AX0T=s*(XBG0Ts-XFG0Ts)  # [270]
 AY0T=s*(YBG0Ts-YFG0Ts)
 
-AX0T=s*(XBG0Ts-XFG0Tsv)  # [270]
-AY0T=s*(YBG0Ts-YFG0Tsv)
+AX0Tv=s*(XBG0Ts-XFG0Tsv)  # [270]
+AY0Tv=s*(YBG0Ts-YFG0Tsv)
+
+#Valeurs mesurées par RIT
+
+AX0r=np.array([-0.46,-0.07])
+AY0r=np.array([0.27,0.18])
+
+AX90r=np.array([0.08,-0.28])
+AY90r=np.array([0.01,0.03])
+
+AX180r=np.array([0.02,0.36])
+AY180r=np.array([-0.2,-0.23])
+
+AX270r=np.array([0.22,-0.14])
+AY270r=np.array([-0.04,-0.01])
+
+AX0Tr=np.array([-0.05,-0.13,-0.5,-0.43,-0.46])
+AY0Tr=np.array([0.02,0.17,0.48,0.64,0.27])
+
 
 angles=[(0,0),(90,0),(180,0),(270,0),(0,-90),(0,-45),(0,45),(0,90)]
 
@@ -201,7 +219,8 @@ def Low(AX0,AY0,AX90,AY90,AX180,AY180,AX270,AY270,AX0T,AY0T):
     return delta
 
 delta=Low(AX0,AY0,AX90,AY90,AX180,AY180,AX270,AY270,AX0T,AY0T)
-# deltav=Low(AX0v,AY0v,AX90v,AY90v,AX180v,AY180v,AX270v,AY270v,AX0Tv,AY0Tv):
+# deltav=Low(AX0v,AY0v,AX90v,AY90v,AX180v,AY180v,AX270v,AY270v,AX0Tv,AY0Tv)
+deltar=Low(AX0r,AY0r,AX90r,AY90r,AX180r,AY180r,AX270r,AY270r,AX0Tr,AY0Tr)
 
 print("Optimisation de Low : La bille est excentrée de dX = ",-1*round(delta[1],3)," mm, dY = ",round(delta[0],3), " mm et de dZ = ", -round(delta[2],3)," mm dans le système de coorodonnées Varian IEC 1217.")    
       
@@ -462,6 +481,8 @@ PM = calcul_PM(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270)
 
 PMv = calcul_PM(AY0v, AY90v, AY180v, AY270v, AX0v, AX90v, AX180v, AX270v)
 
+PMr = calcul_PM(AY0r, AY90r, AY180r, AY270r, AX0r, AX90r, AX180r, AX270r)
+
 # On va soustraire PM (ses projections) à la bille
 
 def calculs_GT_AB(AX0,AY0,AX90,AY90,AX180,AY180,AX270,AY270,PM):
@@ -477,6 +498,7 @@ def calculs_GT_AB(AX0,AY0,AX90,AY90,AX180,AY180,AX270,AY270,PM):
 
 (GT90v,GT270v,AB90v,AB270v) = calculs_GT_AB(AX0v,AY0v,AX90v,AY90v,AX180v,AY180v,AX270v,AY270v,PMv)
 
+(GT90r,GT270r,AB90r,AB270r) = calculs_GT_AB(AX0r,AY0r,AX90r,AY90r,AX180r,AY180r,AX270r,AY270r,PMr)
 
 plt.figure()
 x=np.append(np.degrees(theta),360.)
@@ -761,6 +783,42 @@ plt.ylabel('mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
+
+
+# Graphes AB GT en fonction des excentrages relevés par RIT
+
+plt.figure()
+x=np.append(np.degrees(theta),360.)
+plt.scatter(x, AB90r, color='blue')
+plt.scatter(x, AB270r,color='blue')
+plt.scatter(x, GT90r, color='lime')
+plt.scatter(x, GT270r, color='lime')
+plt.scatter(x, np.sqrt(GT90r**2+AB90r**2), color='red')
+plt.scatter(x, np.sqrt(GT270r**2+AB270r**2), color='red')
+tAB90r = interpolate.splrep(x, AB90r, s=0)
+tAB270r = interpolate.splrep(x, AB270r, s=0)
+tGT90r = interpolate.splrep(x, GT90r, s=0)
+tGT270r = interpolate.splrep(x, GT270r, s=0)
+xnew = np.arange(0, 360, 0.5)
+yAB90r = interpolate.splev(xnew, tAB90r, der=0)
+yAB270r = interpolate.splev(xnew, tAB270r, der=0)
+yGT90r = interpolate.splev(xnew, tGT90r, der=0)
+yGT270r = interpolate.splev(xnew, tGT270r, der=0)
+plt.plot(xnew,yAB270r,color='blue', linestyle='-',label='AB270 RIT')
+plt.plot(xnew,yAB90r,color='blue', linestyle=':',label='AB90 RIT')
+plt.plot(xnew,yGT270r,color='lime', linestyle='-',label='GT270 RIT')
+plt.plot(xnew,yGT90r,color='lime', linestyle=':',label='GT90 RIT')
+plt.plot(xnew,np.sqrt(yGT270r**2+yAB270r**2),color='red', linestyle='-',label='Tot270 RIT')
+plt.plot(xnew,np.sqrt(yGT90r**2+yAB90r**2),color='red', linestyle=':',label='Tot90 RIT')
+plt.plot(xnew,np.ones(len(xnew)),color='black')
+plt.plot(xnew,-1*np.ones(len(xnew)),color='black')
+plt.ylim(-0.3,0.4)
+plt.xlim(0,360)
+plt.legend(loc='upper left')
+plt.ylabel('mm')
+plt.xlabel('Angle Bras')
+plt.title("Déplacements latéraux(AB) et avant-arrière(GT) \n en fonction de l'angle bras\n avec mesures RIT")
+plt.grid(linestyle='--')
 
 #2. Projections en fonction de la table
 
