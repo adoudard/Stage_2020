@@ -195,34 +195,31 @@ AX0Tr=np.array([-0.05,-0.13,-0.5,-0.43,-0.46])
 AY0Tr=np.array([0.02,0.17,0.48,0.64,0.27])
 
 
-angles=[(0,0),(90,0),(180,0),(270,0),(0,-90),(0,-45),(0,45),(0,90)]
+angles=[(0,0),(-90,0),(-180,0),(-270,0),(0,-90),(0,-45),(0,45),(0,90)]
 
-A=np.zeros((2*len(angles),3))
+
 
 def Low(AX0,AY0,AX90,AY90,AX180,AY180,AX270,AY270,AX0T,AY0T):
-
+    
+    A=np.zeros((2*len(angles),3))
+    
     for i in range (len(angles)):
         
         A[2*i]=[round(np.cos(np.radians(angles[i][1])),5), -1*round(np.sin(np.radians(angles[i][1])),5), 0]
         A[2*i+1]=[round(np.cos(np.radians(angles[i][0]))*np.sin(np.radians(angles[i][1])),5), round(np.cos(np.radians(angles[i][0]))*np.cos(np.radians(angles[i][1])),5), round(np.sin(np.radians(angles[i][0])),5)]
     
     B=np.dot(np.linalg.inv(np.dot(A.transpose(),A)),A.transpose())
-    
-    B0=(np.mean(AX0),np.mean(AY0))
-    B90=(np.mean(AX90),np.mean(AY90))
-    B180=(np.mean(AX180),np.mean(AY180))
-    B270=(np.mean(AX270),np.mean(AY270))
-    
-    ksi=np.array([B0[0],B0[1],B90[0],B90[1],B180[0],B180[1],B270[0],B270[1],AX0T[0],AY0T[0],AX0T[1],AY0T[1],AX0T[2],AY0T[2],AX0T[3],AY0T[3]])
+
+    ksi=np.array([AY0[0],AX0[0],AY90[1],AX90[1],AY180[0],AX180[0],AY270[1],AX270[1],AY0T[0],AX0T[0],AY0T[1],AX0T[1],AY0T[2],AX0T[2],AY0T[3],AX0T[3]])
     
     delta=np.dot(B,ksi.transpose())
-    return delta
+    return delta, A
 
-delta=Low(AX0,AY0,AX90,AY90,AX180,AY180,AX270,AY270,AX0T,AY0T)
+delta, A=Low(AX0,AY0,AX90,AY90,AX180,AY180,AX270,AY270,AX0T,AY0T)
 # deltav=Low(AX0v,AY0v,AX90v,AY90v,AX180v,AY180v,AX270v,AY270v,AX0Tv,AY0Tv)
-deltar=Low(AX0r,AY0r,AX90r,AY90r,AX180r,AY180r,AX270r,AY270r,AX0Tr,AY0Tr)
+deltar, Ar=Low(AX0r,AY0r,AX90r,AY90r,AX180r,AY180r,AX270r,AY270r,AX0Tr,AY0Tr)
 
-print("Optimisation de Low : La bille est excentrée de dX = ",-1*round(delta[1],3)," mm, dY = ",round(delta[0],3), " mm et de dZ = ", -round(delta[2],3)," mm dans le système de coorodonnées Varian IEC 1217.")    
+print("Optimisation de Low : La bille est excentrée de dX = ", -1*round(delta[1],3)," mm, dY = ", round(delta[0],3), " mm et de dZ = ", -1*round(delta[2],3)," mm dans le système de coorodonnées Varian IEC 1217., avec les seules mesures en CC270")    
       
 plt.figure()
 
@@ -251,8 +248,8 @@ plt.title('G=0, C variable')
 plt.legend(loc='upper left')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
-plt.xlabel('mm')
-plt.ylabel('mm')
+plt.xlabel('-X,-v, mm')
+plt.ylabel('-Y, u, mm')
 plt.gca().set_aspect('equal', adjustable='box')
 
 plt.subplot(233)
@@ -270,8 +267,8 @@ ax2.add_artist(circle_f)
 plt.text(s*(x90-1)-shift90[0],s*(y90-1)-shift90[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG90)-shift90[0],s*np.mean(YBG90)-shift90[1],"Incertitude : "+str(round(s*np.sqrt(np.std(XBG90)**2+np.std(YBG90)**2),3))+ "mm")
 plt.title('G=90, C variable')
-plt.xlabel('mm')
-plt.ylabel('mm')
+plt.xlabel('Z, -v, mm')
+plt.ylabel('-Y, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -291,8 +288,8 @@ ax2.add_artist(circle_f)
 plt.text(s*(x180-1)-shift180[0],s*(y180-1)-shift180[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG180)-shift180[0],s*np.mean(YBG180)-shift180[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG180)**2+np.std(YBG180)**2),3))+ "mm")
 plt.title('G=180, C variable')
-plt.xlabel('mm')
-plt.ylabel('mm')
+plt.xlabel('X, -v, mm')
+plt.ylabel('-Y, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -326,8 +323,8 @@ ax3.add_artist(circle_f)
 plt.text(s*(x270-1)-shift270[0],s*(y270-1)-shift270[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG270)-shift270[0],s*np.mean(YBG270)-shift270[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG270)**2+np.std(YBG270)**2),3))+ "mm")
 plt.title('G=270, C variable')
-plt.xlabel('mm')
-plt.ylabel('mm')
+plt.xlabel('-Z, -v, mm')
+plt.ylabel('-Y, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -362,8 +359,8 @@ plt.title('G=0, C variable')
 plt.legend(loc='upper left')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
-plt.xlabel('mm')
-plt.ylabel('mm')
+plt.xlabel('-X,-v, mm')
+plt.ylabel('-Y, u, mm')
 plt.gca().set_aspect('equal', adjustable='box')
 
 plt.subplot(233)
@@ -381,8 +378,8 @@ ax2.add_artist(circle_f)
 plt.text(s*(x90v-1)-shift90[0],s*(y90v-1)-shift90[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG90)-shift90[0],s*np.mean(YBG90)-shift90[1],"Incertitude : "+str(round(s*np.sqrt(np.std(XBG90)**2+np.std(YBG90)**2),3))+ "mm")
 plt.title('G=90, C variable')
-plt.xlabel('mm')
-plt.ylabel('mm')
+plt.xlabel('Z, -v, mm')
+plt.ylabel('-Y, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -402,8 +399,8 @@ ax2.add_artist(circle_f)
 plt.text(s*(x180v-1)-shift180[0],s*(y180v-1)-shift180[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG180)-shift180[0],s*np.mean(YBG180)-shift180[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG180)**2+np.std(YBG180)**2),3))+ "mm")
 plt.title('G=180, C variable')
-plt.xlabel('mm')
-plt.ylabel('mm')
+plt.xlabel('X, -v, mm')
+plt.ylabel('-Y, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -437,8 +434,8 @@ ax3.add_artist(circle_f)
 plt.text(s*(x270v-1)-shift270[0],s*(y270v-1)-shift270[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG270)-shift270[0],s*np.mean(YBG270)-shift270[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG270)**2+np.std(YBG270)**2),3))+ "mm")
 plt.title('G=270, C variable')
-plt.xlabel('mm')
-plt.ylabel('mm')
+plt.xlabel('-Z, -v, mm')
+plt.ylabel('-Y, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -452,22 +449,26 @@ def calcul_PM(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270):
     #1.1 Isocentre bras avec C=90,T=0
     
     ug=np.array([AY0[1],AY90[0],AY180[1],AY270[0]])
-    vg=np.array([AX0[1],AX90[0],AX180[1],AX270[0]])
+    vg=-1*np.array([AX0[1],AX90[0],AX180[1],AX270[0]])
     
     xg=ug
-    yg=-vg*np.cos(theta)
-    zg=vg*np.sin(theta)
+    yg=vg*np.cos(theta)
+    zg=-1*vg*np.sin(theta)
+    
+    print (xg)
     
     PG=0.5*np.array([np.max(xg)+np.min(xg), np.max(yg)+np.min(yg), np.max(zg)+np.min(zg)])
     
     #1.2 Isocentre bras avec C=270,T=0
     
     uc=np.array([AY0[0],AY90[1],AY180[0],AY270[1]])
-    vc=np.array([AX0[0],AX90[1],AX180[0],AX270[1]])
+    vc=-1*np.array([AX0[0],AX90[1],AX180[0],AX270[1]])
     
     xc=uc
-    yc=-vc*np.cos(theta)
-    zc=vc*np.sin(theta)
+    yc=vc*np.cos(theta)
+    zc=-1*vc*np.sin(theta)
+    
+    print (xc)
     
     PC=0.5*np.array([np.max(xc)+np.min(xc), np.max(yc)+np.min(yc), np.max(zc)+np.min(zc)])
     
@@ -475,13 +476,13 @@ def calcul_PM(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270):
     
     PM=0.5*(PG+PC)
     
-    return PM
+    return PM,PC,PG
 
-PM = calcul_PM(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270)
+PM,PC,PG = calcul_PM(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270)
 
-PMv = calcul_PM(AY0v, AY90v, AY180v, AY270v, AX0v, AX90v, AX180v, AX270v)
+PMv,PCv,PGv = calcul_PM(AY0v, AY90v, AY180v, AY270v, AX0v, AX90v, AX180v, AX270v)
 
-PMr = calcul_PM(AY0r, AY90r, AY180r, AY270r, AX0r, AX90r, AX180r, AX270r)
+PMr,PCr,PGr = calcul_PM(AY0r, AY90r, AY180r, AY270r, AX0r, AX90r, AX180r, AX270r)
 
 # On va soustraire PM (ses projections) à la bille
 
@@ -489,8 +490,8 @@ def calculs_GT_AB(AX0,AY0,AX90,AY90,AX180,AY180,AX270,AY270,PM):
 
     GT90=np.array([AY0[1]-PM[0], AY90[0]-PM[0], AY180[1]-PM[0], AY270[0]-PM[0], AY0[1]-PM[0]])
     GT270=np.array([AY0[0]-PM[0], AY90[1]-PM[0], AY180[0]-PM[0], AY270[1]-PM[0], AY0[0]-PM[0]])
-    AB90=np.array([AX0[1]+PM[1], AX90[0]-PM[2], AX180[1]-PM[1], AX270[0]+PM[2], AX0[1]+PM[1]]) 
-    AB270=np.array([AX0[0]+PM[1], AX90[1]-PM[2], AX180[0]-PM[1], AX270[1]+PM[2], AX0[0]+PM[1]])
+    AB90=np.array([-AX0[1]-PM[1], -AX90[0]+PM[2], -AX180[1]+PM[1], -AX270[0]-PM[2], -AX0[1]-PM[1]]) 
+    AB270=np.array([-AX0[0]-PM[1], -AX90[1]+PM[2], -AX180[0]+PM[1], -AX270[1]-PM[2], -AX0[0]-PM[1]])
     
     return (GT90,GT270,AB90,AB270)
 
@@ -512,7 +513,7 @@ tAB90 = interpolate.splrep(x, AB90, s=0)
 tAB270 = interpolate.splrep(x, AB270, s=0)
 tGT90 = interpolate.splrep(x, GT90, s=0)
 tGT270 = interpolate.splrep(x, GT270, s=0)
-xnew = np.arange(0, 360, 0.5)
+xnew = np.arange(0, 360.5, 0.5)
 yAB90 = interpolate.splev(xnew, tAB90, der=0)
 yAB270 = interpolate.splev(xnew, tAB270, der=0)
 yGT90 = interpolate.splev(xnew, tGT90, der=0)
@@ -560,8 +561,8 @@ plt.title('G=0, C variable')
 plt.legend(loc='upper left')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
-plt.xlabel('mm')
-plt.ylabel('mm')
+plt.xlabel('-X,-v, mm')
+plt.ylabel('-Y, u, mm')
 plt.gca().set_aspect('equal', adjustable='box')
 
 plt.subplot(233)
@@ -579,8 +580,8 @@ ax2.add_artist(circle_f)
 plt.text(s*(x90-1)-shift90[0],s*(y90-1)-shift90[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG90)-shift90[0],s*np.mean(YBG90)-shift90[1],"Incertitude : "+str(round(s*np.sqrt(np.std(XBG90)**2+np.std(YBG90)**2),3))+ "mm")
 plt.title('G=90, C variable')
-plt.xlabel('mm')
-plt.ylabel('mm')
+plt.xlabel('Z, -v, mm')
+plt.ylabel('-Y, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -600,8 +601,8 @@ ax2.add_artist(circle_f)
 plt.text(s*(x180-1)-shift180[0],s*(y180-1)-shift180[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG180)-shift180[0],s*np.mean(YBG180)-shift180[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG180)**2+np.std(YBG180)**2),3))+ "mm")
 plt.title('G=180, C variable')
-plt.xlabel('mm')
-plt.ylabel('mm')
+plt.xlabel('X, -v, mm')
+plt.ylabel('-Y, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -635,13 +636,13 @@ ax3.add_artist(circle_f)
 plt.text(s*(x270-1)-shift270[0],s*(y270-1)-shift270[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG270)-shift270[0],s*np.mean(YBG270)-shift270[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG270)**2+np.std(YBG270)**2),3))+ "mm")
 plt.title('G=270, C variable')
-plt.xlabel('mm')
-plt.ylabel('mm')
+plt.xlabel('-Z, -v, mm')
+plt.ylabel('-Y, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
 
-print("Optimisation de Hancock sans table : La bille est excentrée de dX = ",-1*round(PM[1],3)," mm, dY = ",round(PM[0],3), " mm et de dZ = ", -1*round(PM[2],3)," mm dans le système de coorodonnées Varian IEC 1217.")
+print("Optimisation de Hancock sans table : La bille est excentrée de dX = ", round(PM[1],3)," mm, dY = ", -1*round(PM[0],3), " mm et de dZ = ", round(PM[2],3)," mm dans le système de coorodonnées Varian IEC 1217.")
 
 plt.figure()
 x=np.append(np.degrees(theta),360.)
@@ -703,8 +704,8 @@ plt.title('G=0, C variable')
 plt.legend(loc='upper left')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
-plt.xlabel('mm')
-plt.ylabel('mm')
+plt.xlabel('-X,-v, mm')
+plt.ylabel('-Y, u, mm')
 plt.gca().set_aspect('equal', adjustable='box')
 
 plt.subplot(233)
@@ -722,8 +723,8 @@ ax2.add_artist(circle_f)
 plt.text(s*(x90v-1)-shift90[0],s*(y90v-1)-shift90[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG90)-shift90[0],s*np.mean(YBG90)-shift90[1],"Incertitude : "+str(round(s*np.sqrt(np.std(XBG90)**2+np.std(YBG90)**2),3))+ "mm")
 plt.title('G=90, C variable')
-plt.xlabel('mm')
-plt.ylabel('mm')
+plt.xlabel('Z, -v, mm')
+plt.ylabel('-Y, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -743,8 +744,8 @@ ax2.add_artist(circle_f)
 plt.text(s*(x180v-1)-shift180[0],s*(y180v-1)-shift180[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG180)-shift180[0],s*np.mean(YBG180)-shift180[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG180)**2+np.std(YBG180)**2),3))+ "mm")
 plt.title('G=180, C variable')
-plt.xlabel('mm')
-plt.ylabel('mm')
+plt.xlabel('X, -v, mm')
+plt.ylabel('-Y, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -778,8 +779,8 @@ ax3.add_artist(circle_f)
 plt.text(s*(x270v-1)-shift270[0],s*(y270v-1)-shift270[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG270)-shift270[0],s*np.mean(YBG270)-shift270[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG270)**2+np.std(YBG270)**2),3))+ "mm")
 plt.title('G=270, C variable')
-plt.xlabel('mm')
-plt.ylabel('mm')
+plt.xlabel('-Z, -v, mm')
+plt.ylabel('-Y, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -863,3 +864,21 @@ def calcul_Dmax(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T):
 Dmax = calcul_Dmax(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T)
 # Vérification sur schéma et test avec mes valeurs : ok
 
+#################
+YXr=np.concatenate((AX0r,AX90r,AX180r,AX270r,AX0Tr))
+
+YX=np.concatenate((AX0,AX90,AX180,AX270,AX0T))
+
+YY=np.concatenate((AY0,AY90,AY180,AY270,AY0T))
+
+YYr=np.concatenate((AY0r,AY90r,AY180r,AY270r,AY0Tr))
+
+x = np.arange(1, 14, 1)
+
+plt.figure()
+
+plt.plot(x,YX,label='Horizontal mesuré')
+plt.plot(x,YY,label='Vertical mesuré')
+plt.plot(x,YXr, label='Horizontal RIT')
+plt.plot(x,YYr, label='Vertical RIT')
+plt.legend()
