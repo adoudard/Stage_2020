@@ -956,7 +956,12 @@ def optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, A
     
     n=0
     
-    while ((abs(D1-D0)/D1 > 0.001) and n<10):
+    x = np.arange(0, 100, 1)
+    y=np.zeros(100)
+    
+    while ((abs(D1-D0)/D1 > 0.001) and n<100):
+        
+        y[n]=D1
         n+=1
         X0=X0-Ri[4]*np.cos(theta0)
         Y0=Y0-Ri[4]*np.sin(theta0)
@@ -986,8 +991,6 @@ def optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, A
         D0 = D1
         D1 = calcul_Dmax(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
         
-        print(D0, D1)
-        
         R,Ri,xc,yc=centre_rot_table(X0T, Y0T)
         
         theta0=np.arctan2((Y0T[4]-yc),X0T[4]-xc)
@@ -995,7 +998,8 @@ def optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, A
         SB+=M
         ST+=np.array([-Ri[4]*np.cos(theta0), -Ri[4]*np.sin(theta0)])
         
-        print(n)
+    plt.figure()
+    plt.plot(x,y)
         
     return(SB, ST, Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
         
