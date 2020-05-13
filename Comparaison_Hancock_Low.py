@@ -3,8 +3,7 @@
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy import interpolate
-
+from scipy import interpolate, optimize
 import centers
 
 
@@ -455,8 +454,6 @@ def calcul_PM(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270):
     yg=vg*np.cos(theta)
     zg=-1*vg*np.sin(theta)
     
-    print (xg)
-    
     PG=0.5*np.array([np.max(xg)+np.min(xg), np.max(yg)+np.min(yg), np.max(zg)+np.min(zg)])
     
     #1.2 Isocentre bras avec C=270,T=0
@@ -467,9 +464,7 @@ def calcul_PM(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270):
     xc=uc
     yc=vc*np.cos(theta)
     zc=-1*vc*np.sin(theta)
-    
-    print (xc)
-    
+
     PC=0.5*np.array([np.max(xc)+np.min(xc), np.max(yc)+np.min(yc), np.max(zc)+np.min(zc)])
     
     #1.3 Isocentre moyen
@@ -862,7 +857,153 @@ def calcul_Dmax(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T):
     return Dmax
 
 Dmax = calcul_Dmax(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T)
+Dmaxr = calcul_Dmax(AY0r, AY90r, AY180r, AY270r, AX0r, AX90r, AX180r, AX270r, AX0Tr, AY0Tr)
+Dmaxv = calcul_Dmax(AY0v, AY90v, AY180v, AY270v, AX0v, AX90v, AX180v, AX270v, AX0Tv, AY0Tv)
 # Vérification sur schéma et test avec mes valeurs : ok
+
+def centre_rot_table(AX0T, AY0T):  # Least-Squares Circle Fit de Randy Bullock
+    
+    x=AX0T
+    y=AY0T
+    # coordinates of the barycenter
+    x_m = np.mean(x)
+    y_m = np.mean(y)
+    
+    # calculation of the reduced coordinates
+    u = x - x_m
+    v = y - y_m
+    
+    # linear system defining the center (uc, vc) in reduced coordinates:
+    #    Suu * uc +  Suv * vc = (Suuu + Suvv)/2
+    #    Suv * uc +  Svv * vc = (Suuv + Svvv)/2
+    Suv  = sum(u*v)
+    Suu  = sum(u**2)
+    Svv  = sum(v**2)
+    Suuv = sum(u**2 * v)
+    Suvv = sum(u * v**2)
+    Suuu = sum(u**3)
+    Svvv = sum(v**3)
+    
+    # Solving the linear system
+    A = np.array([ [ Suu, Suv ], [Suv, Svv]])
+    B = np.array([ Suuu + Suvv, Svvv + Suuv ])/2.0
+    uc, vc = np.linalg.solve(A, B)
+    
+    xc_1 = x_m + uc
+    yc_1 = y_m + vc
+    
+    # Calcul des distances au centre (xc_1, yc_1)
+    Ri_1     = np.sqrt((x-xc_1)**2 + (y-yc_1)**2)
+    R_1      = np.mean(Ri_1)
+    
+    return (R_1,Ri_1,xc_1,yc_1)
+
+
+def optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T, PM, epsilon=0.01):
+    
+    Y0=np.copy(AY0)
+    Y90=np.copy(AY90)
+    Y180=np.copy(AY180)
+    Y270=np.copy(AY270)
+    Y0T=np.copy(AY0T)
+    X0=np.copy(AX0)
+    X90=np.copy(AX90)
+    X180=np.copy(AX180)
+    X270=np.copy(AX270)
+    X0T=np.copy(AX0T)
+    
+    
+    X0=X0+PM[1]
+    Y0=Y0-PM[0]
+    X90=X90-PM[2]
+    Y90=Y90-PM[0]
+    X180=X180-PM[1]
+    Y180=Y180-PM[0]
+    X270=X270+PM[2]
+    Y270=Y270-PM[0]
+    X0T=X0T+PM[1]
+    Y0T=Y0T-PM[0]
+    
+    R,Ri,xc,yc=centre_rot_table(X0T, Y0T)
+    
+    #On détermine les erreurs systématiques liées à l'imperfection de la rotation de table.
+    # On compare donc, en fonction des rayons mesurés;, la position des billes.
+    # L'angle 0 théorique est alors confondu avec l'angle 0 de la table, car c'est
+    # l'angle de référence en traitement.
+    
+    d0=[(X0T[4]-xc)*(1-R/Ri[4]), (Y0T[4]-yc)*(1-R/Ri[4])]
+    
+    # l'angle de référence, l'angle 0, est donné par :
+        
+    theta0=np.arctan2((Y0T[4]-yc),X0T[4]-xc)
+    
+    d90=[X0T[3]-(xc+R*np.cos(theta0+np.radians(-90))), Y0T[3]-(yc+R*np.sin(theta0+np.radians(-90)))]
+    d45=[X0T[2]-(xc+R*np.cos(theta0+np.radians(-45))), Y0T[2]-(yc+R*np.sin(theta0+np.radians(-45)))]
+    d315=[X0T[1]-(xc+R*np.cos(theta0+np.radians(+45))), Y0T[1]-(yc+R*np.sin(theta0+np.radians(45)))]
+    d270=[X0T[0]-(xc+R*np.cos(theta0+np.radians(+90))), Y0T[0]-(yc+R*np.sin(theta0+np.radians(+90)))]
+
+    # Ces décalages systématiques seront toujours appliqués. Ils sont en fait inutiles
+    # apriori, mais je les garde au cas ou j'en aurais besoin pour remanier le code.
+    D0=0
+    
+    
+    D1 = calcul_Dmax(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+    
+    
+    SB=np.copy(PM) # Shift bille
+    
+    ST = np.array([-Ri[4]*np.cos(theta0), -Ri[4]*np.sin(theta0)])
+    
+    n=0
+    
+    while ((abs(D1-D0)/D1 > 0.001) and n<10):
+        n+=1
+        X0=X0-Ri[4]*np.cos(theta0)
+        Y0=Y0-Ri[4]*np.sin(theta0)
+        X90=X90
+        Y90=Y90-Ri[4]*np.sin(theta0)
+        X180=X180+Ri[4]*np.cos(theta0)
+        Y180=Y180-Ri[4]*np.sin(theta0)
+        X270=X270
+        Y270=Y270-Ri[4]*np.sin(theta0)
+        X0T=X0T+np.array([-Ri[4]*np.cos(theta0+np.radians(+90)),-Ri[4]*np.cos(theta0+np.radians(+45)),-Ri[4]*np.cos(theta0+np.radians(-45)),-Ri[4]*np.cos(theta0+np.radians(-90)),-Ri[4]*np.cos(theta0)])
+        Y0T=Y0T+np.array([-Ri[4]*np.sin(theta0+np.radians(+90)),-Ri[4]*np.sin(theta0+np.radians(+45)),-Ri[4]*np.sin(theta0+np.radians(-45)),-Ri[4]*np.sin(theta0+np.radians(-90)),-Ri[4]*np.sin(theta0)])
+        
+        M,C,G = calcul_PM(Y0, Y90, Y180, Y270, X0, X90, X180, X270)
+        
+        X0=X0+M[1]
+        Y0=Y0-M[0]
+        X90=X90-M[2]
+        Y90=Y90-M[0]
+        X180=X180-M[1]
+        Y180=Y180-M[0]
+        X270=X270+M[2]
+        Y270=Y270-M[0]
+        X0T=X0T+M[1]
+        Y0T=Y0T-M[0]
+        
+        SB = SB + M
+        D0 = D1
+        D1 = calcul_Dmax(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+        
+        print(D0, D1)
+        
+        R,Ri,xc,yc=centre_rot_table(X0T, Y0T)
+        
+        theta0=np.arctan2((Y0T[4]-yc),X0T[4]-xc)
+        
+        SB+=M
+        ST+=np.array([-Ri[4]*np.cos(theta0), -Ri[4]*np.sin(theta0)])
+        
+        print(n)
+        
+    return(SB, ST, Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+        
+(SB, ST, Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T) = optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T, PM, epsilon=0.01)
+    # Ensuite, on décale virtuellement l'isocentre de table sur le point mesuré à table 0.
+    
+    # Cela revient à pousser la table pour que le point 0 
+
 
 #################
 YXr=np.concatenate((AX0r,AX90r,AX180r,AX270r,AX0Tr))
