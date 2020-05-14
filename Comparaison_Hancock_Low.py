@@ -1005,6 +1005,8 @@ def plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T):
 
 def optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T, PM, epsilon=0.01):
     
+    D0 = calcul_Dmax(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T)
+    
     Y0=np.copy(AY0)
     Y90=np.copy(AY90)
     Y180=np.copy(AY180)
@@ -1035,50 +1037,57 @@ def optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, A
     # L'angle 0 théorique est alors confondu avec l'angle 0 de la table, car c'est
     # l'angle de référence en traitement.
     
-    d0=[(X0T[4]-xc)*(1-R/Ri[4]), (Y0T[4]-yc)*(1-R/Ri[4])]
+    # d0=[(X0T[4]-xc)*(1-R/Ri[4]), (Y0T[4]-yc)*(1-R/Ri[4])]
     
     # l'angle de référence, l'angle 0, est donné par :
         
     theta0=np.arctan2((Y0T[4]-yc),X0T[4]-xc)
     
-    d90=[X0T[3]-(xc+R*np.cos(theta0+np.radians(-90))), Y0T[3]-(yc+R*np.sin(theta0+np.radians(-90)))]
-    d45=[X0T[2]-(xc+R*np.cos(theta0+np.radians(-45))), Y0T[2]-(yc+R*np.sin(theta0+np.radians(-45)))]
-    d315=[X0T[1]-(xc+R*np.cos(theta0+np.radians(+45))), Y0T[1]-(yc+R*np.sin(theta0+np.radians(45)))]
-    d270=[X0T[0]-(xc+R*np.cos(theta0+np.radians(+90))), Y0T[0]-(yc+R*np.sin(theta0+np.radians(+90)))]
+    # d90=[X0T[3]-(xc+R*np.cos(theta0+np.radians(-90))), Y0T[3]-(yc+R*np.sin(theta0+np.radians(-90)))]
+    # d45=[X0T[2]-(xc+R*np.cos(theta0+np.radians(-45))), Y0T[2]-(yc+R*np.sin(theta0+np.radians(-45)))]
+    # d315=[X0T[1]-(xc+R*np.cos(theta0+np.radians(+45))), Y0T[1]-(yc+R*np.sin(theta0+np.radians(45)))]
+    # d270=[X0T[0]-(xc+R*np.cos(theta0+np.radians(+90))), Y0T[0]-(yc+R*np.sin(theta0+np.radians(+90)))]
 
     # Ces décalages systématiques seront toujours appliqués. Ils sont en fait inutiles
     # apriori, mais je les garde au cas ou j'en aurais besoin pour remanier le code.
-    D0=0
-    
-    
-    D1 = calcul_Dmax(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
     
     
     SB=np.copy(PM) # Shift bille
     
     ST = np.array([-Ri[4]*np.cos(theta0), -Ri[4]*np.sin(theta0)])
     
+    X0=X0-Ri[4]*np.cos(theta0)
+    Y0=Y0-Ri[4]*np.sin(theta0)
+    X90=X90
+    Y90=Y90-Ri[4]*np.sin(theta0)
+    X180=X180+Ri[4]*np.cos(theta0)
+    Y180=Y180-Ri[4]*np.sin(theta0)
+    X270=X270
+    Y270=Y270-Ri[4]*np.sin(theta0)
+    X0T=X0T+np.array([-Ri[4]*np.cos(theta0+np.radians(+90)),-Ri[4]*np.cos(theta0+np.radians(+45)),-Ri[4]*np.cos(theta0+np.radians(-45)),-Ri[4]*np.cos(theta0+np.radians(-90)),-Ri[4]*np.cos(theta0)])
+    Y0T=Y0T+np.array([-Ri[4]*np.sin(theta0+np.radians(+90)),-Ri[4]*np.sin(theta0+np.radians(+45)),-Ri[4]*np.sin(theta0+np.radians(-45)),-Ri[4]*np.sin(theta0+np.radians(-90)),-Ri[4]*np.sin(theta0)])
+    
+    D1 = calcul_Dmax(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+    
+    x = np.arange(0, 102, 1)
+    y=np.zeros(102)
+    
+    y[0]=D0
+    y[1]=D1
     n=0
-    
-    x = np.arange(0, 100, 1)
-    y=np.zeros(100)
-    
-    while ((abs(D1-D0)/D1 > 0.001) and n<100):
+    while ((abs(D1-D0)/D0 > 0.001) and n<100):
         
-        y[n]=D1
+        D0=D1
         n+=1
-        X0=X0-Ri[4]*np.cos(theta0)
-        Y0=Y0-Ri[4]*np.sin(theta0)
-        X90=X90
-        Y90=Y90-Ri[4]*np.sin(theta0)
-        X180=X180+Ri[4]*np.cos(theta0)
-        Y180=Y180-Ri[4]*np.sin(theta0)
-        X270=X270
-        Y270=Y270-Ri[4]*np.sin(theta0)
-        X0T=X0T+np.array([-Ri[4]*np.cos(theta0+np.radians(+90)),-Ri[4]*np.cos(theta0+np.radians(+45)),-Ri[4]*np.cos(theta0+np.radians(-45)),-Ri[4]*np.cos(theta0+np.radians(-90)),-Ri[4]*np.cos(theta0)])
-        Y0T=Y0T+np.array([-Ri[4]*np.sin(theta0+np.radians(+90)),-Ri[4]*np.sin(theta0+np.radians(+45)),-Ri[4]*np.sin(theta0+np.radians(-45)),-Ri[4]*np.sin(theta0+np.radians(-90)),-Ri[4]*np.sin(theta0)])
         
         M,C,G = calcul_PM(Y0, Y90, Y180, Y270, X0, X90, X180, X270)
+        
+        if n==15:
+            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+        elif n==16:
+            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+        elif n==17:
+            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
         
         X0=X0+M[1]
         Y0=Y0-M[0]
@@ -1099,15 +1108,38 @@ def optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, A
         
         theta0=np.arctan2((Y0T[4]-yc),X0T[4]-xc)
         
+        if n==15:
+            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+        elif n==16:
+            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+        elif n==17:
+            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+        
+        X0=X0-Ri[4]*np.cos(theta0)
+        Y0=Y0-Ri[4]*np.sin(theta0)
+        X90=X90
+        Y90=Y90-Ri[4]*np.sin(theta0)
+        X180=X180+Ri[4]*np.cos(theta0)
+        Y180=Y180-Ri[4]*np.sin(theta0)
+        X270=X270
+        Y270=Y270-Ri[4]*np.sin(theta0)
+        X0T=X0T+np.array([-Ri[4]*np.cos(theta0+np.radians(+90)),-Ri[4]*np.cos(theta0+np.radians(+45)),-Ri[4]*np.cos(theta0+np.radians(-45)),-Ri[4]*np.cos(theta0+np.radians(-90)),-Ri[4]*np.cos(theta0)])
+        Y0T=Y0T+np.array([-Ri[4]*np.sin(theta0+np.radians(+90)),-Ri[4]*np.sin(theta0+np.radians(+45)),-Ri[4]*np.sin(theta0+np.radians(-45)),-Ri[4]*np.sin(theta0+np.radians(-90)),-Ri[4]*np.sin(theta0)])
+        
+        D1 = calcul_Dmax(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+        
         SB+=M
         ST+=np.array([-Ri[4]*np.cos(theta0), -Ri[4]*np.sin(theta0)])
         
-        if n==95:
+        y[n+1]=D1
+        
+        if n==15:
             plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
-        elif n==96:
+        elif n==16:
             plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
-        elif n==97:
+        elif n==17:
             plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+            
     plt.figure()
     plt.plot(x,y)
         
