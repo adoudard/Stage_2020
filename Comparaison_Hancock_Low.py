@@ -898,6 +898,110 @@ def centre_rot_table(AX0T, AY0T):  # Least-Squares Circle Fit de Randy Bullock
     
     return (R_1,Ri_1,xc_1,yc_1)
 
+def plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T):
+    
+    plt.figure()
+    
+    plt.subplot(234)
+    plt.text(0,0,"Après corr bille et table de la position de la bille")
+    plt.xlim(-1,5)
+    plt.ylim(-0.5,0.5)
+    plt.xticks([])
+    plt.yticks([])
+    
+    plt.subplot(232)
+    ray=s*np.sqrt(np.max((x0-XFG0)**2+(y0-YFG0)**2))
+    circle_f=plt.Circle((-np.mean(X0),-np.mean(Y0)),radius=ray,color='red',fill=False)
+    plt.scatter(-X0,-Y0,color='red',label='Champ')
+    plt.scatter(0,0,color='orange',label='Bille')
+    plt.scatter(-np.mean(X0),-np.mean(Y0),color='brown',label='Centroïde Champ')
+    plt.xlim(-1,1)
+    plt.ylim(-1,1)
+    fig2 = plt.gcf()
+    ax2 = fig2.gca()
+    ax2.add_artist(circle_f)
+    plt.text(-0.7,-0.7, "Excentrage : "+str(round(s*ray,3))+ "mm")
+    plt.title('G=0, C variable')
+    plt.legend(loc='upper left')
+    plt.xticks(np.linspace(-1,1,9))
+    plt.grid(linestyle='--')
+    plt.xlabel('-X,-v, mm')
+    plt.ylabel('-Y, u, mm')
+    plt.gca().set_aspect('equal', adjustable='box')
+    
+    plt.subplot(233)
+    ray=s*np.sqrt(np.max((x90-XFG90)**2+(y90-YFG90)**2))
+    circle_f=plt.Circle((-np.mean(X90),-np.mean(Y90)),radius=ray,color='red',fill=False)
+    plt.scatter(-X90,-Y90,color='red',label='Champ')
+    plt.scatter(0,0,color='orange',label='Bille')
+    plt.scatter(-np.mean(X90),-np.mean(Y90),color='brown',label='Centroïde Champ')
+    plt.xlim(-1,1)
+    plt.ylim(-1,1)
+    fig2 = plt.gcf()
+    ax2 = fig2.gca()
+    ax2.add_artist(circle_f)
+    plt.text(-0.7,-0.7, "Excentrage : "+str(round(s*ray,3))+ "mm")
+    plt.title('G=90, C variable')
+    plt.legend(loc='upper left')
+    plt.xticks(np.linspace(-1,1,9))
+    plt.grid(linestyle='--')
+    plt.xlabel('-X,-v, mm')
+    plt.ylabel('-Y, u, mm')
+    plt.gca().set_aspect('equal', adjustable='box')
+    
+    plt.subplot(235)
+    ray=s*np.sqrt(np.max((x180-XFG180)**2+(y180-YFG180)**2))
+    circle_f=plt.Circle((-np.mean(X180),-np.mean(Y180)),radius=ray,color='red',fill=False)
+    plt.scatter(-X180,-Y180,color='red',label='Champ')
+    plt.scatter(0,0,color='orange',label='Bille')
+    plt.scatter(-np.mean(X180),-np.mean(Y180),color='brown',label='Centroïde Champ')
+    plt.xlim(-1,1)
+    plt.ylim(-1,1)
+    fig2 = plt.gcf()
+    ax2 = fig2.gca()
+    ax2.add_artist(circle_f)
+    plt.text(-0.7,-0.7, "Excentrage : "+str(round(s*ray,3))+ "mm")
+    plt.title('G=180, C variable')
+    plt.legend(loc='upper left')
+    plt.xticks(np.linspace(-1,1,9))
+    plt.grid(linestyle='--')
+    plt.xlabel('-X,-v, mm')
+    plt.ylabel('-Y, u, mm')
+    plt.gca().set_aspect('equal', adjustable='box')
+    
+    plt.subplot(231)
+    shift=(np.mean(s*XFG0Ts),np.mean(s*YFG0Ts))
+    plt.scatter(s*XFG0Ts-shift[0],s*YFG0Ts-shift[1],color='red')
+    plt.scatter(X0T,Y0T,color='orange')
+    plt.scatter(0,0,color='brown')
+    plt.xlim(-1,1)
+    plt.ylim(-1,1)
+    plt.title('G=0, T variable')
+    plt.xlabel('mm')
+    plt.ylabel('mm')
+    plt.xticks(np.linspace(-1,1,9))
+    plt.grid(linestyle='--')
+    plt.gca().set_aspect('equal', adjustable='box')
+    
+    plt.subplot(236)
+    ray=s*np.sqrt(np.max((x270-XFG270)**2+(y270-YFG270)**2))
+    circle_f=plt.Circle((-np.mean(X270),-np.mean(Y270)),radius=ray,color='red',fill=False)
+    plt.scatter(-X270,-Y270,color='red',label='Champ')
+    plt.scatter(0,0,color='orange',label='Bille')
+    plt.scatter(-np.mean(X270),-np.mean(Y270),color='brown',label='Centroïde Champ')
+    plt.xlim(-1,1)
+    plt.ylim(-1,1)
+    fig2 = plt.gcf()
+    ax2 = fig2.gca()
+    ax2.add_artist(circle_f)
+    plt.text(-0.7,-0.7, "Excentrage : "+str(round(s*ray,3))+ "mm")
+    plt.title('G=270, C variable')
+    plt.legend(loc='upper left')
+    plt.xticks(np.linspace(-1,1,9))
+    plt.grid(linestyle='--')
+    plt.xlabel('-X,-v, mm')
+    plt.ylabel('-Y, u, mm')
+    plt.gca().set_aspect('equal', adjustable='box')
 
 def optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T, PM, epsilon=0.01):
     
@@ -998,6 +1102,12 @@ def optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, A
         SB+=M
         ST+=np.array([-Ri[4]*np.cos(theta0), -Ri[4]*np.sin(theta0)])
         
+        if n==95:
+            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+        elif n==96:
+            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+        elif n==97:
+            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
     plt.figure()
     plt.plot(x,y)
         
@@ -1007,6 +1117,8 @@ def optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, A
     # Ensuite, on décale virtuellement l'isocentre de table sur le point mesuré à table 0.
     
     # Cela revient à pousser la table pour que le point 0 
+
+
 
 
 #################
