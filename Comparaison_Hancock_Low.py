@@ -44,11 +44,8 @@ cy = 0.5*(y4_270+y4_90)
 
 # Ces valeurs nous serviront à générer des listes écart bille-champ virtuels avec le CC4, avec les suffixes v.
 
-# dossier ou se trouve le fichier txt
-os.chdir('E:\\Stage 2020\\Scripts')
-
 # Ouverture en lecture seule
-analyse=open("30_04.txt","r")
+analyse=open('E:\\Stage 2020\\Scripts\\30_04.txt',"r")
 lines = analyse.readlines()[1:]  #Skip du header
 Gs=[]  # List des Gantry Angles
 Cs=[]  # List des Table Angles
@@ -193,32 +190,40 @@ AY270r=np.array([-0.04,-0.01])
 AX0Tr=np.array([-0.05,-0.13,-0.5,-0.43,-0.46])
 AY0Tr=np.array([0.02,0.17,0.48,0.64,0.27])
 
+AY180T = AY0T - AY0[0] + AY180[0]
+AY180Tr = AY0Tr - AY0r[0] + AY180r[0]
 
-angles=[(0,0),(-90,0),(-180,0),(-270,0),(0,-90),(0,-45),(0,45),(0,90)]
+AY180Tp = AY0T - AY0[0] + AY180[1]
+AY180Tpr = AY0Tr - AY0r[0] + AY180r[1]
+
+AX180T = AX0T - AX0[0] - AX180[0]
+AX180Tr = AX0Tr - AX0r[0] - AX180r[0]
+
+AX180Tp = AX0T - AX0[0] - AX180[1]
+AX180Tpr = AX0Tr - AX0r[0] - AX180r[1]
+
+
+
+angles=[(0,0),(+90,0),(+180,0),(+270,0),(0,-90),(0,-45),(0,45),(0,90)]
 
 
 
 def Low(AX0,AY0,AX90,AY90,AX180,AY180,AX270,AY270,AX0T,AY0T):
     
-    A=np.zeros((2*len(angles),3))
-    
-    for i in range (len(angles)):
-        
-        A[2*i]=[round(np.cos(np.radians(angles[i][1])),5), -1*round(np.sin(np.radians(angles[i][1])),5), 0]
-        A[2*i+1]=[round(np.cos(np.radians(angles[i][0]))*np.sin(np.radians(angles[i][1])),5), round(np.cos(np.radians(angles[i][0]))*np.cos(np.radians(angles[i][1])),5), round(np.sin(np.radians(angles[i][0])),5)]
+    A=np.array([[1,0,0],[0,1,0],[1,0,0],[0,0,-1],[1,0,0],[0,-1,0],[1,0,0],[0,0,1],[0,1,0],[-1,0,0],[0.5*np.sqrt(2),0.5*np.sqrt(2),0],[-0.5*np.sqrt(2),0.5*np.sqrt(2),0],[0.5*np.sqrt(2),-0.5*np.sqrt(2),0],[0.5*np.sqrt(2),0.5*np.sqrt(2),0],[0,-1,0],[1,0,0]])
     
     B=np.dot(np.linalg.inv(np.dot(A.transpose(),A)),A.transpose())
 
     ksi=np.array([AY0[0],AX0[0],AY90[1],AX90[1],AY180[0],AX180[0],AY270[1],AX270[1],AY0T[0],AX0T[0],AY0T[1],AX0T[1],AY0T[2],AX0T[2],AY0T[3],AX0T[3]])
     
     delta=np.dot(B,ksi.transpose())
-    return delta, A
+    return delta, A, ksi, B
 
-delta, A=Low(AX0,AY0,AX90,AY90,AX180,AY180,AX270,AY270,AX0T,AY0T)
+delta, A, ksi, B=Low(AX0,AY0,AX90,AY90,AX180,AY180,AX270,AY270,AX0T,AY0T)
 # deltav=Low(AX0v,AY0v,AX90v,AY90v,AX180v,AY180v,AX270v,AY270v,AX0Tv,AY0Tv)
-deltar, Ar=Low(AX0r,AY0r,AX90r,AY90r,AX180r,AY180r,AX270r,AY270r,AX0Tr,AY0Tr)
+deltar, Ar, ksir, Br=Low(AX0r,AY0r,AX90r,AY90r,AX180r,AY180r,AX270r,AY270r,AX0Tr,AY0Tr)
 
-print("Optimisation de Low : La bille est excentrée de dX = ", -1*round(delta[1],3)," mm, dY = ", round(delta[0],3), " mm et de dZ = ", -1*round(delta[2],3)," mm dans le système de coorodonnées Varian IEC 1217., avec les seules mesures en CC270")    
+print("Optimisation de Low : La bille est excentrée de dX = ", round(delta[0],3)," mm, dY = ", round(delta[1],3), " mm et de dZ = ", round(delta[2],3)," mm dans le système standard, avec les seules mesures en CC270, soit un dR = ",round(np.sqrt(delta[0]**2+delta[1]**2+0**2),3), "mm.")    
       
 plt.figure()
 
@@ -247,8 +252,8 @@ plt.title('G=0, C variable')
 plt.legend(loc='upper left')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
-plt.xlabel('-X,-v, mm')
-plt.ylabel('-Y, u, mm')
+plt.xlabel('Y,-v, mm')
+plt.ylabel('X, u, mm')
 plt.gca().set_aspect('equal', adjustable='box')
 
 plt.subplot(233)
@@ -266,8 +271,8 @@ ax2.add_artist(circle_f)
 plt.text(s*(x90-1)-shift90[0],s*(y90-1)-shift90[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG90)-shift90[0],s*np.mean(YBG90)-shift90[1],"Incertitude : "+str(round(s*np.sqrt(np.std(XBG90)**2+np.std(YBG90)**2),3))+ "mm")
 plt.title('G=90, C variable')
-plt.xlabel('Z, -v, mm')
-plt.ylabel('-Y, u, mm')
+plt.xlabel('-Z, -v, mm')
+plt.ylabel('X, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -287,8 +292,8 @@ ax2.add_artist(circle_f)
 plt.text(s*(x180-1)-shift180[0],s*(y180-1)-shift180[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG180)-shift180[0],s*np.mean(YBG180)-shift180[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG180)**2+np.std(YBG180)**2),3))+ "mm")
 plt.title('G=180, C variable')
-plt.xlabel('X, -v, mm')
-plt.ylabel('-Y, u, mm')
+plt.xlabel('-Y, -v, mm')
+plt.ylabel('X, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -322,8 +327,8 @@ ax3.add_artist(circle_f)
 plt.text(s*(x270-1)-shift270[0],s*(y270-1)-shift270[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG270)-shift270[0],s*np.mean(YBG270)-shift270[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG270)**2+np.std(YBG270)**2),3))+ "mm")
 plt.title('G=270, C variable')
-plt.xlabel('-Z, -v, mm')
-plt.ylabel('-Y, u, mm')
+plt.xlabel('Z, -v, mm')
+plt.ylabel('X, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -358,8 +363,8 @@ plt.title('G=0, C variable')
 plt.legend(loc='upper left')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
-plt.xlabel('-X,-v, mm')
-plt.ylabel('-Y, u, mm')
+plt.xlabel('Y,-v, mm')
+plt.ylabel('X, u, mm')
 plt.gca().set_aspect('equal', adjustable='box')
 
 plt.subplot(233)
@@ -377,8 +382,8 @@ ax2.add_artist(circle_f)
 plt.text(s*(x90v-1)-shift90[0],s*(y90v-1)-shift90[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG90)-shift90[0],s*np.mean(YBG90)-shift90[1],"Incertitude : "+str(round(s*np.sqrt(np.std(XBG90)**2+np.std(YBG90)**2),3))+ "mm")
 plt.title('G=90, C variable')
-plt.xlabel('Z, -v, mm')
-plt.ylabel('-Y, u, mm')
+plt.xlabel('-Z, -v, mm')
+plt.ylabel('X, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -398,8 +403,8 @@ ax2.add_artist(circle_f)
 plt.text(s*(x180v-1)-shift180[0],s*(y180v-1)-shift180[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG180)-shift180[0],s*np.mean(YBG180)-shift180[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG180)**2+np.std(YBG180)**2),3))+ "mm")
 plt.title('G=180, C variable')
-plt.xlabel('X, -v, mm')
-plt.ylabel('-Y, u, mm')
+plt.xlabel('Y, -v, mm')
+plt.ylabel('X, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -433,8 +438,8 @@ ax3.add_artist(circle_f)
 plt.text(s*(x270v-1)-shift270[0],s*(y270v-1)-shift270[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG270)-shift270[0],s*np.mean(YBG270)-shift270[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG270)**2+np.std(YBG270)**2),3))+ "mm")
 plt.title('G=270, C variable')
-plt.xlabel('-Z, -v, mm')
-plt.ylabel('-Y, u, mm')
+plt.xlabel('Z, -v, mm')
+plt.ylabel('X, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -448,7 +453,7 @@ def calcul_PM(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270):
     #1.1 Isocentre bras avec C=90,T=0
     
     ug=np.array([AY0[1],AY90[0],AY180[1],AY270[0]])
-    vg=-1*np.array([AX0[1],AX90[0],AX180[1],AX270[0]])
+    vg=np.array([AX0[1],AX90[0],AX180[1],AX270[0]])
     
     xg=ug
     yg=vg*np.cos(theta)
@@ -459,7 +464,7 @@ def calcul_PM(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270):
     #1.2 Isocentre bras avec C=270,T=0
     
     uc=np.array([AY0[0],AY90[1],AY180[0],AY270[1]])
-    vc=-1*np.array([AX0[0],AX90[1],AX180[0],AX270[1]])
+    vc=np.array([AX0[0],AX90[1],AX180[0],AX270[1]])
     
     xc=uc
     yc=vc*np.cos(theta)
@@ -485,8 +490,8 @@ def calculs_GT_AB(AX0,AY0,AX90,AY90,AX180,AY180,AX270,AY270,PM):
 
     GT90=np.array([AY0[1]-PM[0], AY90[0]-PM[0], AY180[1]-PM[0], AY270[0]-PM[0], AY0[1]-PM[0]])
     GT270=np.array([AY0[0]-PM[0], AY90[1]-PM[0], AY180[0]-PM[0], AY270[1]-PM[0], AY0[0]-PM[0]])
-    AB90=-1*np.array([-AX0[1]-PM[1], -AX90[0]+PM[2], -AX180[1]+PM[1], -AX270[0]-PM[2], -AX0[1]-PM[1]])   #  *-1 car le poly RIT n'est pas cohérent
-    AB270=-1*np.array([-AX0[0]-PM[1], -AX90[1]+PM[2], -AX180[0]+PM[1], -AX270[1]-PM[2], -AX0[0]-PM[1]])  #  avec lui-même ... Même si ça ne change fondamentalement rien
+    AB90=np.array([AX0[1]-PM[1], AX90[0]+PM[2], AX180[1]+PM[1], AX270[0]-PM[2], AX0[1]-PM[1]])   #  *-1 car le poly RIT n'est pas cohérent
+    AB270=np.array([AX0[0]-PM[1], AX90[1]+PM[2], AX180[0]+PM[1], AX270[1]-PM[2], AX0[0]-PM[1]])  #  avec lui-même ... Même si ça ne change fondamentalement rien
     
     return (GT90,GT270,AB90,AB270)
 
@@ -539,11 +544,11 @@ plt.xticks([])
 plt.yticks([])
 
 plt.subplot(232)
-shift0=(np.mean(s*XBG0+PM[1]),np.mean(s*YBG0-PM[0]))
+shift0=(np.mean(s*XBG0-PM[1]),np.mean(s*YBG0-PM[0]))
 ray=s*np.sqrt(np.max((x0-XFG0)**2+(y0-YFG0)**2))
 circle_f=plt.Circle((s*x0-shift0[0],s*y0-shift0[1]),radius=ray,color='red',fill=False)
 plt.scatter(s*XFG0-shift0[0],s*YFG0-shift0[1],color='red',label='Champ')
-plt.scatter(s*XBG0+PM[1]-shift0[0],s*YBG0-PM[0]-shift0[1],color='orange',label='Bille')
+plt.scatter(s*XBG0-PM[1]-shift0[0],s*YBG0-PM[0]-shift0[1],color='orange',label='Bille')
 plt.scatter(s*x0-shift0[0],s*y0-shift0[1],color='brown',label='Centroïde Champ')
 plt.xlim(-1,1)
 plt.ylim(-1,1)
@@ -556,16 +561,16 @@ plt.title('G=0, C variable')
 plt.legend(loc='upper left')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
-plt.xlabel('-X,-v, mm')
-plt.ylabel('-Y, u, mm')
+plt.xlabel('Y,-v, mm')
+plt.ylabel('X, u, mm')
 plt.gca().set_aspect('equal', adjustable='box')
 
 plt.subplot(233)
-shift90=(np.mean(s*XBG90-PM[2]),np.mean(s*YBG90-PM[0]))
+shift90=(np.mean(s*XBG90+PM[2]),np.mean(s*YBG90-PM[0]))
 ray=s*np.sqrt(np.max((x90-XFG90)**2+(y90-YFG90)**2))
 circle_f=plt.Circle((s*x90-shift90[0],s*y90-shift90[1]),radius=ray,color='red',fill=False)
 plt.scatter(s*XFG90-shift90[0],s*YFG90-shift90[1],color='red')
-plt.scatter(s*XBG90-PM[2]-shift90[0],s*YBG90-PM[0]-shift90[1],color='orange')
+plt.scatter(s*XBG90+PM[2]-shift90[0],s*YBG90-PM[0]-shift90[1],color='orange')
 plt.scatter(s*x90-shift90[0],s*y90-shift90[1],color='brown')
 plt.xlim(-1,1)
 plt.ylim(-1,1)
@@ -575,18 +580,18 @@ ax2.add_artist(circle_f)
 plt.text(s*(x90-1)-shift90[0],s*(y90-1)-shift90[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG90)-shift90[0],s*np.mean(YBG90)-shift90[1],"Incertitude : "+str(round(s*np.sqrt(np.std(XBG90)**2+np.std(YBG90)**2),3))+ "mm")
 plt.title('G=90, C variable')
-plt.xlabel('Z, -v, mm')
-plt.ylabel('-Y, u, mm')
+plt.xlabel('-Z, -v, mm')
+plt.ylabel('X, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
 
 plt.subplot(235)
-shift180=(np.mean(s*XBG180-PM[1]),np.mean(s*YBG180-PM[0]))
+shift180=(np.mean(s*XBG180+PM[1]),np.mean(s*YBG180-PM[0]))
 ray=s*np.sqrt(np.max((x180-XFG180)**2+(y180-YFG180)**2))
 circle_f=plt.Circle((s*x180-shift180[0],s*y180-shift180[1]),radius=ray,color='red',fill=False)
 plt.scatter(s*XFG180-shift180[0],s*YFG180-shift180[1],color='red')
-plt.scatter(s*XBG180-PM[1]-shift180[0],s*YBG180-PM[0]-shift180[1],color='orange')
+plt.scatter(s*XBG180+PM[1]-shift180[0],s*YBG180-PM[0]-shift180[1],color='orange')
 plt.scatter(s*x180-shift180[0],s*y180-shift180[1],color='brown')
 plt.xlim(-1,1)
 plt.ylim(-1,1)
@@ -596,8 +601,8 @@ ax2.add_artist(circle_f)
 plt.text(s*(x180-1)-shift180[0],s*(y180-1)-shift180[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG180)-shift180[0],s*np.mean(YBG180)-shift180[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG180)**2+np.std(YBG180)**2),3))+ "mm")
 plt.title('G=180, C variable')
-plt.xlabel('X, -v, mm')
-plt.ylabel('-Y, u, mm')
+plt.xlabel('-Y, -v, mm')
+plt.ylabel('X, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -617,11 +622,11 @@ plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
 
 plt.subplot(236)
-shift270=(np.mean(s*XBG270+PM[2]),np.mean(s*YBG270-PM[0]))
+shift270=(np.mean(s*XBG270-PM[2]),np.mean(s*YBG270-PM[0]))
 ray=s*np.sqrt(np.max((x270-XFG270)**2+(y270-YFG270)**2))
 circle_f=plt.Circle((s*x270-shift270[0],s*y270-shift270[1]),radius=ray,color='red',fill=False)
 plt.scatter(s*XFG270-shift270[0],s*YFG270-shift270[1],color='red')
-plt.scatter(s*XBG270+PM[2]-shift270[0],s*YBG270-PM[0]-shift270[1],color='orange')
+plt.scatter(s*XBG270-PM[2]-shift270[0],s*YBG270-PM[0]-shift270[1],color='orange')
 plt.scatter(s*x270-shift270[0],s*y270-shift270[1],color='brown')
 plt.xlim(-1,1)
 plt.ylim(-1,1)
@@ -631,13 +636,13 @@ ax3.add_artist(circle_f)
 plt.text(s*(x270-1)-shift270[0],s*(y270-1)-shift270[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG270)-shift270[0],s*np.mean(YBG270)-shift270[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG270)**2+np.std(YBG270)**2),3))+ "mm")
 plt.title('G=270, C variable')
-plt.xlabel('-Z, -v, mm')
-plt.ylabel('-Y, u, mm')
+plt.xlabel('Z, -v, mm')
+plt.ylabel('X, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
 
-print("Optimisation de Hancock sans table : La bille est excentrée de dX = ", round(PM[1],3)," mm, dY = ", -1*round(PM[0],3), " mm et de dZ = ", round(PM[2],3)," mm dans le système de coorodonnées Varian IEC 1217.")
+print("Optimisation de Hancock sans table : La bille est excentrée de dX = ", round(PM[0],3)," mm, dY = ", round(PM[1],3), " mm et de dZ = ", round(PM[2],3)," mm dans le système de coorodonnées de base.")
 
 plt.figure()
 x=np.append(np.degrees(theta),360.)
@@ -682,11 +687,11 @@ plt.xticks([])
 plt.yticks([])
 
 plt.subplot(232)
-shift0=(np.mean(s*XBG0+PMv[1]),np.mean(s*YBG0-PMv[0]))
+shift0=(np.mean(s*XBG0-PMv[1]),np.mean(s*YBG0-PMv[0]))
 ray=s*np.sqrt(np.max((x0v-XFG0v)**2+(y0v-YFG0v)**2))
 circle_f=plt.Circle((s*x0v-shift0[0],s*y0v-shift0[1]),radius=ray,color='red',fill=False)
 plt.scatter(s*XFG0v-shift0[0],s*YFG0v-shift0[1],color='red',label='Champ')
-plt.scatter(s*XBG0+PMv[1]-shift0[0],s*YBG0-PMv[0]-shift0[1],color='orange',label='Bille')
+plt.scatter(s*XBG0-PMv[1]-shift0[0],s*YBG0-PMv[0]-shift0[1],color='orange',label='Bille')
 plt.scatter(s*x0v-shift0[0],s*y0v-shift0[1],color='brown',label='Centroïde Champ')
 plt.xlim(-1,1)
 plt.ylim(-1,1)
@@ -699,16 +704,16 @@ plt.title('G=0, C variable')
 plt.legend(loc='upper left')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
-plt.xlabel('-X,-v, mm')
-plt.ylabel('-Y, u, mm')
+plt.xlabel('Y,-v, mm')
+plt.ylabel('X, u, mm')
 plt.gca().set_aspect('equal', adjustable='box')
 
 plt.subplot(233)
-shift90=(np.mean(s*XBG90-PMv[2]),np.mean(s*YBG90-PMv[0]))
+shift90=(np.mean(s*XBG90+PMv[2]),np.mean(s*YBG90-PMv[0]))
 ray=s*np.sqrt(np.max((x90v-XFG90v)**2+(y90v-YFG90v)**2))
 circle_f=plt.Circle((s*x90v-shift90[0],s*y90v-shift90[1]),radius=ray,color='red',fill=False)
 plt.scatter(s*XFG90v-shift90[0],s*YFG90v-shift90[1],color='red')
-plt.scatter(s*XBG90-PMv[2]-shift90[0],s*YBG90-PMv[0]-shift90[1],color='orange')
+plt.scatter(s*XBG90+PMv[2]-shift90[0],s*YBG90-PMv[0]-shift90[1],color='orange')
 plt.scatter(s*x90v-shift90[0],s*y90v-shift90[1],color='brown')
 plt.xlim(-1,1)
 plt.ylim(-1,1)
@@ -718,18 +723,18 @@ ax2.add_artist(circle_f)
 plt.text(s*(x90v-1)-shift90[0],s*(y90v-1)-shift90[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG90)-shift90[0],s*np.mean(YBG90)-shift90[1],"Incertitude : "+str(round(s*np.sqrt(np.std(XBG90)**2+np.std(YBG90)**2),3))+ "mm")
 plt.title('G=90, C variable')
-plt.xlabel('Z, -v, mm')
-plt.ylabel('-Y, u, mm')
+plt.xlabel('-Z, -v, mm')
+plt.ylabel('X, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
 
 plt.subplot(235)
-shift180=(np.mean(s*XBG180-PMv[1]),np.mean(s*YBG180-PMv[0]))
+shift180=(np.mean(s*XBG180+PMv[1]),np.mean(s*YBG180-PMv[0]))
 ray=s*np.sqrt(np.max((x180v-XFG180v)**2+(y180v-YFG180v)**2))
 circle_f=plt.Circle((s*x180v-shift180[0],s*y180v-shift180[1]),radius=ray,color='red',fill=False)
 plt.scatter(s*XFG180v-shift180[0],s*YFG180v-shift180[1],color='red')
-plt.scatter(s*XBG180-PMv[1]-shift180[0],s*YBG180-PMv[0]-shift180[1],color='orange')
+plt.scatter(s*XBG180+PMv[1]-shift180[0],s*YBG180-PMv[0]-shift180[1],color='orange')
 plt.scatter(s*x180v-shift180[0],s*y180v-shift180[1],color='brown')
 plt.xlim(-1,1)
 plt.ylim(-1,1)
@@ -739,8 +744,8 @@ ax2.add_artist(circle_f)
 plt.text(s*(x180v-1)-shift180[0],s*(y180v-1)-shift180[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG180)-shift180[0],s*np.mean(YBG180)-shift180[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG180)**2+np.std(YBG180)**2),3))+ "mm")
 plt.title('G=180, C variable')
-plt.xlabel('X, -v, mm')
-plt.ylabel('-Y, u, mm')
+plt.xlabel('-Y, -v, mm')
+plt.ylabel('X, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -760,11 +765,11 @@ plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
 
 plt.subplot(236)
-shift270=(np.mean(s*XBG270+PMv[2]),np.mean(s*YBG270-PMv[0]))
+shift270=(np.mean(s*XBG270-PMv[2]),np.mean(s*YBG270-PMv[0]))
 ray=s*np.sqrt(np.max((x270v-XFG270v)**2+(y270v-YFG270v)**2))
 circle_f=plt.Circle((s*x270v-shift270[0],s*y270v-shift270[1]),radius=ray,color='red',fill=False)
 plt.scatter(s*XFG270v-shift270[0],s*YFG270v-shift270[1],color='red')
-plt.scatter(s*XBG270+PMv[2]-shift270[0],s*YBG270-PMv[0]-shift270[1],color='orange')
+plt.scatter(s*XBG270-PMv[2]-shift270[0],s*YBG270-PMv[0]-shift270[1],color='orange')
 plt.scatter(s*x270v-shift270[0],s*y270v-shift270[1],color='brown')
 plt.xlim(-1,1)
 plt.ylim(-1,1)
@@ -774,8 +779,8 @@ ax3.add_artist(circle_f)
 plt.text(s*(x270v-1)-shift270[0],s*(y270v-1)-shift270[1], "Excentrage : "+str(round(s*ray,3))+ "mm")
 plt.text(s*np.mean(XBG270)-shift270[0],s*np.mean(YBG270)-shift270[1],"Incertitude : "+str(round(0.224*np.sqrt(np.std(XBG270)**2+np.std(YBG270)**2),3))+ "mm")
 plt.title('G=270, C variable')
-plt.xlabel('-Z, -v, mm')
-plt.ylabel('-Y, u, mm')
+plt.xlabel('Z, -v, mm')
+plt.ylabel('X, u, mm')
 plt.xticks(np.linspace(-1,1,9))
 plt.grid(linestyle='--')
 plt.gca().set_aspect('equal', adjustable='box')
@@ -829,6 +834,14 @@ plt.grid(linestyle='--')
 
 def calcul_Dmax(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T):
     
+    AY180T = AY0T - AY0[0] + AY180[0]
+
+    AY180Tp = AY0T - AY0[0] + AY180[1]
+
+    AX180T = AX0T - AX0[0] - AX180[0]
+
+    AX180Tp = AX0T - AX0[0] - AX180[1]
+    
     D_0_270_0 = np.sqrt((AX0)**2+(AY0)**2)[0]
     D_0_90_0 = np.sqrt((AX0)**2+(AY0)**2)[1]
     D_90_90_0 = np.sqrt((AX90)**2+(AY90)**2)[0]
@@ -842,15 +855,15 @@ def calcul_Dmax(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T):
     D_0_270_45 = np.sqrt((AX0T)**2+(AY0T)**2)[2]
     D_0_270_90 = np.sqrt((AX0T)**2+(AY0T)**2)[3]
     
-    D_180_90_270 = np.sqrt((AX0T[0]-AX0[0]- AX180[1])**2+(AY0T[0]-AY0[0]+ AY180[1])**2)
-    D_180_90_315 = np.sqrt((AX0T[1]-AX0[0]- AX180[1])**2+(AY0T[1]-AY0[0]+ AY180[1])**2)
-    D_180_90_45 = np.sqrt((AX0T[2]-AX0[0]- AX180[1])**2+(AY0T[2]-AY0[0]+ AY180[1])**2)
-    D_180_90_90 = np.sqrt((AX0T[3]-AX0[0]- AX180[1])**2+(AY0T[3]-AY0[0]+ AY180[1])**2)
+    D_180_90_270 = np.sqrt(AX180Tp[0]**2 + AY180Tp[0]**2)
+    D_180_90_315 = np.sqrt(AX180Tp[1]**2 + AY180Tp[1]**2)
+    D_180_90_45 = np.sqrt(AX180Tp[2]**2 + AY180Tp[2]**2)
+    D_180_90_90 = np.sqrt(AX180Tp[3]**2 + AY180Tp[3]**2)
     
-    D_180_270_270 = np.sqrt((AX0T[0]-AX0[0]- AX180[0])**2+(AY0T[0]-AY0[0]+ AY180[0])**2)
-    D_180_270_315 = np.sqrt((AX0T[1]-AX0[0]- AX180[0])**2+(AY0T[1]-AY0[0]+ AY180[0])**2)
-    D_180_270_45 = np.sqrt((AX0T[2]-AX0[0]- AX180[0])**2+(AY0T[2]-AY0[0]+ AY180[0])**2)
-    D_180_270_90 = np.sqrt((AX0T[3]-AX0[0]- AX180[0])**2+(AY0T[3]-AY0[0]+ AY180[0])**2)
+    D_180_270_270 = np.sqrt(AX180T[0]**2 + AY180T[0]**2)
+    D_180_270_315 = np.sqrt(AX180T[1]**2 + AY180T[1]**2)
+    D_180_270_45 = np.sqrt(AX180T[2]**2 + AY180T[2]**2)
+    D_180_270_90 = np.sqrt(AX180T[3]**2 + AY180T[3]**2)
     
     Dmax=max(D_0_270_0,D_0_90_0,D_90_90_0,D_90_270_0,D_180_270_0,D_180_90_0,D_270_90_0,D_270_270_0,D_0_270_270,D_0_270_315,D_0_270_45,D_0_270_90,D_180_90_270,D_180_90_315,D_180_90_45,D_180_90_90,D_180_270_270,D_180_270_315,D_180_270_45,D_180_270_90)
     
@@ -925,8 +938,8 @@ def plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T):
     plt.legend(loc='upper left')
     plt.xticks(np.linspace(-1,1,9))
     plt.grid(linestyle='--')
-    plt.xlabel('-X,-v, mm')
-    plt.ylabel('-Y, u, mm')
+    plt.xlabel('Y,-v, mm')
+    plt.ylabel('X, u, mm')
     plt.gca().set_aspect('equal', adjustable='box')
     
     plt.subplot(233)
@@ -945,8 +958,8 @@ def plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T):
     plt.legend(loc='upper left')
     plt.xticks(np.linspace(-1,1,9))
     plt.grid(linestyle='--')
-    plt.xlabel('-X,-v, mm')
-    plt.ylabel('-Y, u, mm')
+    plt.xlabel('-Z,-v, mm')
+    plt.ylabel('X, u, mm')
     plt.gca().set_aspect('equal', adjustable='box')
     
     plt.subplot(235)
@@ -965,20 +978,25 @@ def plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T):
     plt.legend(loc='upper left')
     plt.xticks(np.linspace(-1,1,9))
     plt.grid(linestyle='--')
-    plt.xlabel('-X,-v, mm')
-    plt.ylabel('-Y, u, mm')
+    plt.xlabel('-Y,-v, mm')
+    plt.ylabel('X, u, mm')
     plt.gca().set_aspect('equal', adjustable='box')
     
     plt.subplot(231)
     shift=(np.mean(s*XFG0Ts),np.mean(s*YFG0Ts))
     plt.scatter(s*XFG0Ts-shift[0],s*YFG0Ts-shift[1],color='red')
-    plt.scatter(X0T,Y0T,color='orange')
+    plt.scatter(X0T[0],Y0T[0],color='orangered',label='T270')
+    plt.scatter(X0T[1],Y0T[1],color='orange',label='T315')
+    plt.scatter(X0T[2],Y0T[2],color='chartreuse',label='T45')
+    plt.scatter(X0T[3],Y0T[3],color='turquoise',label='T90')
+    plt.scatter(X0T[4],Y0T[4],color='yellow',label='T0')
     plt.scatter(0,0,color='brown')
     plt.xlim(-1,1)
     plt.ylim(-1,1)
     plt.title('G=0, T variable')
     plt.xlabel('mm')
     plt.ylabel('mm')
+    plt.legend()
     plt.xticks(np.linspace(-1,1,9))
     plt.grid(linestyle='--')
     plt.gca().set_aspect('equal', adjustable='box')
@@ -999,11 +1017,201 @@ def plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T):
     plt.legend(loc='upper left')
     plt.xticks(np.linspace(-1,1,9))
     plt.grid(linestyle='--')
-    plt.xlabel('-X,-v, mm')
-    plt.ylabel('-Y, u, mm')
+    plt.xlabel('Z,-v, mm')
+    plt.ylabel('X, u, mm')
     plt.gca().set_aspect('equal', adjustable='box')
+    
+def optimisation_2(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T):
+    
+    Lis_dis=np.zeros((101,101))
+    Lis_PM=np.zeros((101,101),dtype=list)
+    Lis_ST=np.zeros((101,101),dtype=list)
+    
+    
+    
+    for i in range (101):
+        for j in range (101):
+            
+            Y0=np.copy(AY0)
+            Y90=np.copy(AY90)
+            Y180=np.copy(AY180)
+            Y270=np.copy(AY270)
+            Y0T=np.copy(AY0T)
+            X0=np.copy(AX0)
+            X90=np.copy(AX90)
+            X180=np.copy(AX180)
+            X270=np.copy(AX270)
+            X0T=np.copy(AX0T)
+            
+            ST = np.array([(i-50)*0.01, (j-50)*0.01])
+            
+            theta0 = np.arctan2(ST[1],ST[0])
+            
+            R = np.sqrt(ST[1]**2+ST[0]**2)
+            
+            X0=X0-R*np.cos(theta0)
+            Y0=Y0-R*np.sin(theta0)
+            X90=X90
+            Y90=Y90-R*np.sin(theta0)
+            X180=X180+R*np.cos(theta0)
+            Y180=Y180-R*np.sin(theta0)
+            X270=X270
+            Y270=Y270-R*np.sin(theta0)
+            X0T=X0T-R*np.array([np.cos(theta0+np.radians(+90)),np.cos(theta0+np.radians(+45)),np.cos(theta0+np.radians(-45)),np.cos(theta0+np.radians(-90)),np.cos(theta0)])
+            Y0T=Y0T-R*np.array([np.sin(theta0+np.radians(+90)),np.sin(theta0+np.radians(+45)),np.sin(theta0+np.radians(-45)),np.sin(theta0+np.radians(-90)),np.sin(theta0)])
+            
+            M,C,G = calcul_PM(Y0, Y90, Y180, Y270, X0, X90, X180, X270)
+            
+            X0=X0-M[1]
+            Y0=Y0-M[0]
+            X90=X90+M[2]
+            Y90=Y90-M[0]
+            X180=X180+M[1]
+            Y180=Y180-M[0]
+            X270=X270-M[2]
+            Y270=Y270-M[0]
+            X0T=X0T-M[1]
+            Y0T=Y0T-M[0]
+            
+            D = calcul_Dmax(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+            
+            Lis_dis[i,j]=D
+            Lis_PM[i,j]=M
+            Lis_ST[i,j]=ST
+            
+            
+    plt.figure()
+    plt.imshow(Lis_dis,origin='lower')
+    
+    return
+    
+# optimisation_2(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T)
 
-def optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T, PM, epsilon=0.01):
+def optimisation_3(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T, PM, Dmax, epsilon):
+    
+    
+    
+    Y0=np.copy(AY0)
+    Y90=np.copy(AY90)
+    Y180=np.copy(AY180)
+    Y270=np.copy(AY270)
+    Y0T=np.copy(AY0T)
+    X0=np.copy(AX0)
+    X90=np.copy(AX90)
+    X180=np.copy(AX180)
+    X270=np.copy(AX270)
+    X0T=np.copy(AX0T)
+    
+    
+    X0=X0-PM[1]
+    Y0=Y0-PM[0]
+    X90=X90+PM[2]
+    Y90=Y90-PM[0]
+    X180=X180+PM[1]
+    Y180=Y180-PM[0]
+    X270=X270-PM[2]
+    Y270=Y270-PM[0]
+    X0T=X0T-PM[1]
+    Y0T=Y0T-PM[0]
+    
+    SB=np.copy(PM)
+    ST=np.array([0.,0.])
+    
+    D = calcul_Dmax(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T)
+
+    x=[]
+    y=[]
+    
+    STX=[50]
+    STY=[50]
+    i=0
+    
+    loop=True
+    def gradT(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T, D, xTrueoryFalse):
+        
+        if xTrueoryFalse:
+            
+            X0=X0+0.005
+            X180=X180-0.005
+            X0T=X0T+np.array([0,0.0025*np.sqrt(2),-0.0025*np.sqrt(2),0,0.005])
+            Y0T=Y0T+np.array([0.005,0.0025*np.sqrt(2),-0.0025*np.sqrt(2),-0.005,0])
+            
+            D1 = calcul_Dmax(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+        
+        else:
+        
+            Y0=Y0+0.005
+            Y90=Y90+0.005
+            Y180=Y180+0.005
+            Y270=Y270+0.005
+            X0T=X0T+np.array([-0.005,-0.0025*np.sqrt(2),0.0025*np.sqrt(2),0.005,0])
+            Y0T=Y0T+np.array([0,0.0025*np.sqrt(2),0.0025*np.sqrt(2),0,0.005])
+    
+            D1 = calcul_Dmax(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+        return ((D1-D)/0.005)
+    
+    while(loop and i<100):
+        
+        x.append(i)
+        y.append(D)
+       
+        G=(gradT(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T, D, True),gradT(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T, D, False))
+        
+        step = np.sqrt(G[0]**2+G[1]**2)
+        if np.sqrt(G[0]**2+G[1]**2)<epsilon:
+            loop=False
+            
+        else:
+            
+            theta0=np.pi+np.arctan2(G[1],G[0])
+            
+       
+            ST+=step*0.005*np.array([np.cos(theta0),np.sin(theta0)])
+    
+            X0=X0-step*0.005*np.cos(theta0)
+            Y0=Y0-step*0.005*np.sin(theta0)
+            X90=X90
+            Y90=Y90-step*0.005*np.sin(theta0)
+            X180=X180+step*0.005*np.cos(theta0)
+            Y180=Y180-step*0.005*np.sin(theta0)
+            X270=X270
+            Y270=Y270-step*0.005*np.sin(theta0)
+            X0T=X0T+step*0.005*np.array([np.cos(theta0+np.radians(+90)),np.cos(theta0+np.radians(+45)),np.cos(theta0+np.radians(-45)),np.cos(theta0+np.radians(-90)),np.cos(theta0)])
+            Y0T=Y0T+step*0.005*np.array([np.sin(theta0+np.radians(+90)),np.sin(theta0+np.radians(+45)),np.sin(theta0+np.radians(-45)),np.sin(theta0+np.radians(-90)),np.sin(theta0)])
+            
+            M,C,G = calcul_PM(Y0, Y90, Y180, Y270, X0, X90, X180, X270)
+            
+            X0=X0-M[1]
+            Y0=Y0-M[0]
+            X90=X90+M[2]
+            Y90=Y90-M[0]
+            X180=X180+M[1]
+            Y180=Y180-M[0]
+            X270=X270-M[2]
+            Y270=Y270-M[0]
+            X0T=X0T-M[1]
+            Y0T=Y0T-M[0]
+        
+            SB = SB + M
+            
+            D = calcul_Dmax(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+            i+=1
+            STX.append(ST[0]*100 + 50)
+            STY.append(ST[1]*100 + 50)
+    
+    plt.figure()
+    plt.plot(x,y)
+    plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+    plt.figure()
+    plt.plot(STX, STY)
+    plt.xlim(0,100)
+    plt.ylim(0,100)   
+    plt.gca().set_aspect('equal', adjustable='box')     
+    return(SB, ST, Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T,D)
+
+# (SB, ST, Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T,D)=optimisation_3(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T, PM, Dmax, 0.001)
+
+def optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T, PM, epsilon=0,step=0.02):
     
     D0 = calcul_Dmax(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T)
     
@@ -1019,15 +1227,15 @@ def optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, A
     X0T=np.copy(AX0T)
     
     
-    X0=X0+PM[1]
+    X0=X0-PM[1]
     Y0=Y0-PM[0]
-    X90=X90-PM[2]
+    X90=X90+PM[2]
     Y90=Y90-PM[0]
-    X180=X180-PM[1]
+    X180=X180+PM[1]
     Y180=Y180-PM[0]
-    X270=X270+PM[2]
+    X270=X270-PM[2]
     Y270=Y270-PM[0]
-    X0T=X0T+PM[1]
+    X0T=X0T-PM[1]
     Y0T=Y0T-PM[0]
     
     R,Ri,xc,yc=centre_rot_table(X0T, Y0T)
@@ -1054,50 +1262,45 @@ def optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, A
     
     SB=np.copy(PM) # Shift bille
     
-    ST = np.array([-Ri[4]*np.cos(theta0), -Ri[4]*np.sin(theta0)])
+    ST = step*np.array([-Ri[4]*np.cos(theta0), -Ri[4]*np.sin(theta0)])
     
-    X0=X0-Ri[4]*np.cos(theta0)
-    Y0=Y0-Ri[4]*np.sin(theta0)
+    X0=X0-step*Ri[4]*np.cos(theta0)
+    Y0=Y0-step*Ri[4]*np.sin(theta0)
     X90=X90
-    Y90=Y90-Ri[4]*np.sin(theta0)
-    X180=X180+Ri[4]*np.cos(theta0)
-    Y180=Y180-Ri[4]*np.sin(theta0)
+    Y90=Y90-step*Ri[4]*np.sin(theta0)
+    X180=X180+step*Ri[4]*np.cos(theta0)
+    Y180=Y180-step*Ri[4]*np.sin(theta0)
     X270=X270
-    Y270=Y270-Ri[4]*np.sin(theta0)
-    X0T=X0T+np.array([-Ri[4]*np.cos(theta0+np.radians(+90)),-Ri[4]*np.cos(theta0+np.radians(+45)),-Ri[4]*np.cos(theta0+np.radians(-45)),-Ri[4]*np.cos(theta0+np.radians(-90)),-Ri[4]*np.cos(theta0)])
-    Y0T=Y0T+np.array([-Ri[4]*np.sin(theta0+np.radians(+90)),-Ri[4]*np.sin(theta0+np.radians(+45)),-Ri[4]*np.sin(theta0+np.radians(-45)),-Ri[4]*np.sin(theta0+np.radians(-90)),-Ri[4]*np.sin(theta0)])
+    Y270=Y270-step*Ri[4]*np.sin(theta0)
+    X0T=X0T+step*np.array([-Ri[4]*np.cos(theta0+np.radians(+90)),-Ri[4]*np.cos(theta0+np.radians(+45)),-Ri[4]*np.cos(theta0+np.radians(-45)),-Ri[4]*np.cos(theta0+np.radians(-90)),-Ri[4]*np.cos(theta0)])
+    Y0T=Y0T+step*np.array([-Ri[4]*np.sin(theta0+np.radians(+90)),-Ri[4]*np.sin(theta0+np.radians(+45)),-Ri[4]*np.sin(theta0+np.radians(-45)),-Ri[4]*np.sin(theta0+np.radians(-90)),-Ri[4]*np.sin(theta0)])
     
     D1 = calcul_Dmax(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
     
-    x = np.arange(0, 102, 1)
-    y=np.zeros(102)
+    x = np.arange(0, 202, 1)
+    y=np.zeros(202)
     
     y[0]=D0
     y[1]=D1
+    STX=[50]
+    STY=[50]
     n=0
-    while ((abs(D1-D0)/D0 > 0.001) and n<100):
+    while (n<200 ): #and abs((D1-D0)/D1)>2*epsilon*step
         
         D0=D1
         n+=1
         
         M,C,G = calcul_PM(Y0, Y90, Y180, Y270, X0, X90, X180, X270)
         
-        if n==15:
-            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
-        elif n==16:
-            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
-        elif n==17:
-            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
-        
-        X0=X0+M[1]
+        X0=X0-M[1]
         Y0=Y0-M[0]
-        X90=X90-M[2]
+        X90=X90+M[2]
         Y90=Y90-M[0]
-        X180=X180-M[1]
+        X180=X180+M[1]
         Y180=Y180-M[0]
-        X270=X270+M[2]
+        X270=X270-M[2]
         Y270=Y270-M[0]
-        X0T=X0T+M[1]
+        X0T=X0T-M[1]
         Y0T=Y0T-M[0]
         
         SB = SB + M
@@ -1108,66 +1311,58 @@ def optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, A
         
         theta0=np.arctan2((Y0T[4]-yc),X0T[4]-xc)
         
-        if n==15:
-            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
-        elif n==16:
-            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
-        elif n==17:
-            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
-        
-        X0=X0-Ri[4]*np.cos(theta0)
-        Y0=Y0-Ri[4]*np.sin(theta0)
+        X0=X0-step*Ri[4]*np.cos(theta0)
+        Y0=Y0-step*Ri[4]*np.sin(theta0)
         X90=X90
-        Y90=Y90-Ri[4]*np.sin(theta0)
-        X180=X180+Ri[4]*np.cos(theta0)
-        Y180=Y180-Ri[4]*np.sin(theta0)
+        Y90=Y90-step*Ri[4]*np.sin(theta0)
+        X180=X180+step*Ri[4]*np.cos(theta0)
+        Y180=Y180-step*Ri[4]*np.sin(theta0)
         X270=X270
-        Y270=Y270-Ri[4]*np.sin(theta0)
-        X0T=X0T+np.array([-Ri[4]*np.cos(theta0+np.radians(+90)),-Ri[4]*np.cos(theta0+np.radians(+45)),-Ri[4]*np.cos(theta0+np.radians(-45)),-Ri[4]*np.cos(theta0+np.radians(-90)),-Ri[4]*np.cos(theta0)])
-        Y0T=Y0T+np.array([-Ri[4]*np.sin(theta0+np.radians(+90)),-Ri[4]*np.sin(theta0+np.radians(+45)),-Ri[4]*np.sin(theta0+np.radians(-45)),-Ri[4]*np.sin(theta0+np.radians(-90)),-Ri[4]*np.sin(theta0)])
-        
-        D1 = calcul_Dmax(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+        Y270=Y270-step*Ri[4]*np.sin(theta0)
+        X0T=X0T+step*np.array([-Ri[4]*np.cos(theta0+np.radians(+90)),-Ri[4]*np.cos(theta0+np.radians(+45)),-Ri[4]*np.cos(theta0+np.radians(-45)),-Ri[4]*np.cos(theta0+np.radians(-90)),-Ri[4]*np.cos(theta0)])
+        Y0T=Y0T+step*np.array([-Ri[4]*np.sin(theta0+np.radians(+90)),-Ri[4]*np.sin(theta0+np.radians(+45)),-Ri[4]*np.sin(theta0+np.radians(-45)),-Ri[4]*np.sin(theta0+np.radians(-90)),-Ri[4]*np.sin(theta0)])
         
         SB+=M
-        ST+=np.array([-Ri[4]*np.cos(theta0), -Ri[4]*np.sin(theta0)])
+        ST+=step*np.array([-Ri[4]*np.cos(theta0), -Ri[4]*np.sin(theta0)])
         
+        D1 = calcul_Dmax(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
         y[n+1]=D1
         
-        if n==15:
-            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
-        elif n==16:
-            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
-        elif n==17:
-            plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
-            
+        STX.append(ST[0]*100 + 50)
+        STY.append(ST[1]*100 + 50)
+        
     plt.figure()
     plt.plot(x,y)
+    plot_controle(Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+    plt.figure()
+    plt.plot(STX,STY)
+    plt.xlim(0,100)
+    plt.ylim(0,100)
+    plt.gca().set_aspect('equal', adjustable='box')
         
-    return(SB, ST, Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T)
+    return(SB, ST, Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T, D1)
         
-(SB, ST, Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T) = optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T, PM, epsilon=0.01)
+# (SB, ST, Y0, Y90, Y180, Y270, X0, X90, X180, X270, X0T, Y0T) = optimisation_table(AY0, AY90, AY180, AY270, AX0, AX90, AX180, AX270, AX0T, AY0T, PM, epsilon=0.01)
     # Ensuite, on décale virtuellement l'isocentre de table sur le point mesuré à table 0.
-    
+# (SBv, STv, Y0v, Y90v, Y180v, Y270v, X0v, X90v, X180v, X270v, X0Tv, Y0Tv) = optimisation_table(AY0v, AY90v, AY180v, AY270v, AX0v, AX90v, AX180v, AX270v, AX0Tv, AY0Tv, PMv, epsilon=0.01)
     # Cela revient à pousser la table pour que le point 0 
 
 
-
-
 #################
-YXr=np.concatenate((AX0r,AX90r,AX180r,AX270r,AX0Tr))
+# YXr=np.concatenate((AX0r,AX90r,AX180r,AX270r,AX0Tr))
 
-YX=np.concatenate((AX0,AX90,AX180,AX270,AX0T))
+# YX=np.concatenate((AX0,AX90,AX180,AX270,AX0T))
 
-YY=np.concatenate((AY0,AY90,AY180,AY270,AY0T))
+# YY=np.concatenate((AY0,AY90,AY180,AY270,AY0T))
 
-YYr=np.concatenate((AY0r,AY90r,AY180r,AY270r,AY0Tr))
+# YYr=np.concatenate((AY0r,AY90r,AY180r,AY270r,AY0Tr))
 
-x = np.arange(1, 14, 1)
+# x = np.arange(1, 14, 1)
 
-plt.figure()
+# plt.figure()
 
-plt.plot(x,YX,label='Horizontal mesuré')
-plt.plot(x,YY,label='Vertical mesuré')
-plt.plot(x,YXr, label='Horizontal RIT')
-plt.plot(x,YYr, label='Vertical RIT')
-plt.legend()
+# plt.plot(x,YX,label='Horizontal mesuré')
+# plt.plot(x,YY,label='Vertical mesuré')
+# plt.plot(x,YXr, label='Horizontal RIT')
+# plt.plot(x,YYr, label='Vertical RIT')
+# plt.legend()
